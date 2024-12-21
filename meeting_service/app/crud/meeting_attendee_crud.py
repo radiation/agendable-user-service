@@ -27,10 +27,25 @@ async def get_meeting_attendees(
     return attendees
 
 
+# Option to get meeting attendee by ID or by meeting ID and user ID
 async def get_meeting_attendee(
-    db: AsyncSession, meeting_attendee_id: int
+    db: AsyncSession,
+    meeting_attendee_id: int = None,
+    meeting_id: int = None,
+    user_id: int = None,
 ) -> MeetingAttendee:
-    stmt = select(MeetingAttendee).filter(MeetingAttendee.id == meeting_attendee_id)
+    if meeting_attendee_id:
+        stmt = select(MeetingAttendee).filter(MeetingAttendee.id == meeting_attendee_id)
+    elif meeting_id and user_id:
+        stmt = select(MeetingAttendee).filter(
+            MeetingAttendee.meeting_id == meeting_id, MeetingAttendee.user_id == user_id
+        )
+    else:
+        raise ValueError(
+            "You must provide either meeting_attendee_id \
+            or both meeting_id and user_id."
+        )
+
     result = await db.execute(stmt)
     attendee = result.scalars().first()
     return attendee

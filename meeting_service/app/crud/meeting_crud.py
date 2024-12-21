@@ -1,4 +1,4 @@
-from app.models import Meeting, MeetingRecurrence
+from app.models import Meeting, MeetingAttendee, MeetingRecurrence
 from app.schemas.meeting_schemas import MeetingCreate, MeetingUpdate
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,6 +71,22 @@ async def delete_meeting(db: AsyncSession, meeting_id: int) -> Meeting:
         return db_meeting
     else:
         return None
+
+
+async def get_meeting_with_attendee(
+    db: AsyncSession, meeting_id: int, user_id: int
+) -> Meeting:
+    stmt = (
+        select(Meeting)
+        .options(joinedload(Meeting.attendees))
+        .filter(
+            Meeting.id == meeting_id,
+            Meeting.attendees.any(MeetingAttendee.user_id == user_id),
+        )
+    )
+    result = await db.execute(stmt)
+    meeting = result.scalars().first()
+    return meeting
 
 
 async def get_meeting_recurrence_by_meeting(

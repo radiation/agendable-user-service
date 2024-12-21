@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+
 # Create a new task
 @router.post("/", response_model=task_schemas.TaskRetrieve)
 async def create_task(

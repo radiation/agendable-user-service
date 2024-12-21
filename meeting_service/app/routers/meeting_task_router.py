@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+
 # Create a new meeting task
 @router.post("/", response_model=schemas.MeetingTaskRetrieve)
 async def create_meeting_task(

@@ -2,10 +2,20 @@ from app import db
 from app.crud import meeting_crud
 from app.schemas import meeting_schemas
 from app.services import meeting_service
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
+
+
+# Helper function to get user metadata from request headers
+def get_user_metadata(request: Request) -> dict:
+    user_id = request.headers.get("X-User-ID")
+    user_email = request.headers.get("X-User-Email")
+    if not user_id:
+        raise HTTPException(status_code=403, detail="User not authenticated")
+    return {"user_id": user_id, "user_email": user_email}
+
 
 # Create a new meeting
 @router.post("/", response_model=meeting_schemas.MeetingRetrieve)
@@ -26,12 +36,21 @@ async def get_meetings(
 # Get a meeting by ID
 @router.get("/{meeting_id}", response_model=meeting_schemas.MeetingRetrieve)
 async def get_meeting(
-    meeting_id: int, db: AsyncSession = Depends(db.get_db)
+    meeting_id: int, request: Request, db: AsyncSession = Depends(db.get_db)
 ) -> meeting_schemas.MeetingRetrieve:
+    # Access the user_id and attendee set by the middleware
+    attendee = request.state.attendee
+
+    # Fetch the meeting details
     meeting = await meeting_crud.get_meeting(db=db, meeting_id=meeting_id)
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
-    return meeting
+
+    # Add attendee-specific data (e.g., private notes)
+    meeting_data = meeting_schemas.MeetingRetrieve.model_validate(meeting).model_dump()
+    meeting_data["private_notes"] = attendee.private_notes
+
+    return meeting_schemas.MeetingRetrieve(**meeting_data)
 
 
 # Update an existing meeting

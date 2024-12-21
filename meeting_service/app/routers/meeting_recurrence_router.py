@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+
 # Create a new meeting recurrence
 @router.post("/", response_model=meeting_recurrence_schemas.MeetingRecurrenceRetrieve)
 async def create_meeting_recurrence(

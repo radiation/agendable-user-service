@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
+
 # Create a new meeting attendee
 @router.post("/", response_model=meeting_attendee_schemas.MeetingAttendeeRetrieve)
 async def create_meeting_attendee(
