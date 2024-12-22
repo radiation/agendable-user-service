@@ -17,6 +17,11 @@ def get_user_metadata(request: Request) -> dict:
     return {"user_id": user_id, "user_email": user_email}
 
 
+# Middleware to set the attendee for the request
+async def get_attendee(request: Request):
+    return request.state.attendee
+
+
 # Create a new meeting
 @router.post("/", response_model=meeting_schemas.MeetingRetrieve)
 async def create_meeting(
@@ -36,11 +41,10 @@ async def get_meetings(
 # Get a meeting by ID
 @router.get("/{meeting_id}", response_model=meeting_schemas.MeetingRetrieve)
 async def get_meeting(
-    meeting_id: int, request: Request, db: AsyncSession = Depends(db.get_db)
+    meeting_id: int,
+    db: AsyncSession = Depends(db.get_db),
+    attendee: dict = Depends(get_attendee),
 ) -> meeting_schemas.MeetingRetrieve:
-    # Access the user_id and attendee set by the middleware
-    attendee = request.state.attendee
-
     # Fetch the meeting details
     meeting = await meeting_crud.get_meeting(db=db, meeting_id=meeting_id)
     if not meeting:
@@ -48,7 +52,7 @@ async def get_meeting(
 
     # Add attendee-specific data (e.g., private notes)
     meeting_data = meeting_schemas.MeetingRetrieve.model_validate(meeting).model_dump()
-    meeting_data["private_notes"] = attendee.private_notes
+    meeting_data["private_notes"] = attendee.get("private_notes", "")
 
     return meeting_schemas.MeetingRetrieve(**meeting_data)
 

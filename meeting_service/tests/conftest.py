@@ -4,6 +4,7 @@ import pytest
 from app.db import get_db
 from app.main import app
 from app.models import Base
+from app.routers.meeting_router import get_attendee
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -40,7 +41,11 @@ async def test_client(engine, tables):
         async with async_session_factory() as session:
             yield session
 
+    # Override the get_db dependency
     app.dependency_overrides[get_db] = override_get_db
+
+    # Mock the attendee dependency globally
+    app.dependency_overrides[get_attendee] = lambda: {"private_notes": "Mock notes"}
 
     # Providing both session and client
     async with AsyncClient(
