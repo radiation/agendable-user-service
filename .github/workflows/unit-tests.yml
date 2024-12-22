@@ -19,6 +19,7 @@ jobs:
         working-directory: meeting_service
     env:
       PYTHONPATH: ${{ github.workspace }}/meeting_service
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
