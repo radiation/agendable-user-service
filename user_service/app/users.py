@@ -1,7 +1,11 @@
+import datetime
+import os
 import uuid
-from typing import Optional
+from typing import Any, Optional
 
+import jwt
 from app.db import User, get_user_db
+from dotenv import load_dotenv
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import (
@@ -11,12 +15,21 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
 
-SECRET = "SECRET"
+load_dotenv()
+
+# Access the secret key
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set in the environment variables!")
+
+# TODO: Remove this line in production
+print(f"Loaded SECRET_KEY: {SECRET_KEY[:4]}...")
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
-    reset_password_token_secret = SECRET
-    verification_token_secret = SECRET
+    reset_password_token_secret = SECRET_KEY
+    verification_token_secret = SECRET_KEY
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
@@ -39,8 +52,20 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
-def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+class CustomJWTStrategy(JWTStrategy):
+    async def write_token(self, user_id: Any) -> str:
+        payload = {
+            "sub": str(user_id),
+            "iss": "user-service",
+            "iat": datetime.datetime.utcnow(),
+            "exp": datetime.datetime.utcnow()
+            + datetime.timedelta(seconds=self.lifetime_seconds),
+        }
+        return jwt.encode(payload, self.secret, algorithm=self.algorithm)
+
+
+def get_jwt_strategy() -> CustomJWTStrategy:
+    return CustomJWTStrategy(secret=SECRET_KEY, lifetime_seconds=3600)
 
 
 auth_backend = AuthenticationBackend(

@@ -1,9 +1,23 @@
-from app.db import User
+from app.db import User, get_async_session
 from app.schemas import UserCreate, UserRead, UserUpdate
 from app.users import auth_backend, current_active_user, fastapi_users
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 app = FastAPI()
+
+
+@app.get("/users", tags=["users"])
+async def get_user_by_email(
+    email: str = Query(...), db: AsyncSession = Depends(get_async_session)
+):
+    result = await db.execute(select(User).filter(User.email == email))
+    user = result.scalar_one_or_none()
+    if not user:
+        return {"message": "User not found"}
+    return {"id": str(user.id), "email": user.email}
+
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
