@@ -1,13 +1,7 @@
 #!/bin/bash
 
-# Wait for PostgreSQL to be available
-echo "Waiting for PostgreSQL to be available..."
-while ! pg_isready -h postgres -p 5432 -U user; do
-    sleep 1
-done
-
 # Run Kong migrations
-echo "PostgreSQL is up - executing Kong migrations..."
+echo "Running Kong migrations..."
 kong migrations bootstrap || kong migrations up || true
 
 # Start Kong
@@ -23,6 +17,9 @@ done
 echo "Kong is up - configuring services and routes..."
 
 # Run script to configure services and routes
-/bin/bash /create_routes.sh
+/bin/bash /configure.sh
 
 echo "Kong configuration complete."
+
+# Keep Kong running
+tail -f /dev/null

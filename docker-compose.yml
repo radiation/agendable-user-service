@@ -67,6 +67,8 @@ services:
 
   kong:
     image: kong:latest
+    build:
+      context: ./kong
     command: >
       /bin/bash -c "
         kong migrations bootstrap;
@@ -93,7 +95,8 @@ services:
       - "${KONG_PROXY_SSL_PORT}:${KONG_PROXY_SSL_PORT}"
       - "${KONG_ADMIN_PORT}:${KONG_ADMIN_PORT}"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - web
       - postgres
