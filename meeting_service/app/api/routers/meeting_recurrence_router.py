@@ -1,5 +1,5 @@
-from app import db
 from app.crud import meeting_recurrence_crud
+from app.db import db
 from app.schemas import meeting_recurrence_schemas, meeting_schemas
 from app.services import meeting_recurrence_service
 from fastapi import APIRouter, Depends, HTTPException

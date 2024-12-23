@@ -1,5 +1,5 @@
-from app import db
 from app.crud import meeting_crud
+from app.db import db
 from app.schemas import meeting_schemas
 from app.services import meeting_service
 from fastapi import APIRouter, Depends, HTTPException, Request

@@ -1,7 +1,7 @@
 from typing import List
 
-from app import db
 from app.crud import meeting_attendee_crud
+from app.db import db
 from app.schemas import meeting_attendee_schemas, meeting_schemas
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession

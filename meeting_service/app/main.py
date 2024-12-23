@@ -1,6 +1,6 @@
 import os
 
-from app.routers import (
+from app.api.routers import (
     meeting_attendee_router,
     meeting_recurrence_router,
     meeting_router,

@@ -1,10 +1,10 @@
 import os
 
 import pytest
-from app.db import get_db
+from app.api.routers.meeting_router import get_attendee
+from app.db.db import get_db
 from app.main import app
 from app.models import Base
-from app.routers.meeting_router import get_attendee
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
