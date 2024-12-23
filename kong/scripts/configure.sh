@@ -19,7 +19,7 @@ else
 fi
 
 # Check and create routes for the User Service
-ROUTES=("user_service_docs:/user-service/docs" "auth_route:/auth" "users_route:/users")
+ROUTES=("user_service_docs:/docs" "auth_route:/auth" "users_route:/users" "openapi_json:/openapi.json")
 for ROUTE in "${ROUTES[@]}"; do
     NAME=$(echo "$ROUTE" | /usr/bin/cut -d':' -f1)
     PATH=$(echo "$ROUTE" | /usr/bin/cut -d':' -f2)
@@ -54,9 +54,9 @@ else
 fi
 
 # Check and create routes for the Meeting Service
-ROUTES=("meeting_service_docs:/meeting-service/docs" "meetings_route:/meetings" \
+ROUTES=("meeting_service_docs:/docs" "meetings_route:/meetings" \
         "recurrences_route:/meeting_recurrences" "attendees_route:/meeting_attendees" \
-        "tasks_route:/tasks" "meeting_tasks_route:/meeting_tasks")
+        "tasks_route:/tasks" "meeting_tasks_route:/meeting_tasks" "openapi_json:/openapi.json")
 for ROUTE in "${ROUTES[@]}"; do
     NAME=$(echo "$ROUTE" | /usr/bin/cut -d':' -f1)
     PATH=$(echo "$ROUTE" | /usr/bin/cut -d':' -f2)
@@ -119,7 +119,7 @@ if [ "$PLUGIN_EXISTS" != "request-transformer" ]; then
     /usr/bin/curl -i -X POST \
         --url ${KONG_URL}/services/meeting_service/plugins/ \
         --data "name=request-transformer" \
-        --data "config.add.headers=X-User-ID:\\$claims.sub,X-User-Email:\\$claims.email"
+        --data "config.add.headers=X-User-ID:\$claims.sub,X-User-Email:\$claims.email"
 else
     echo "request-transformer Plugin already enabled for meeting_service."
 fi
