@@ -1,59 +1,196 @@
 from datetime import datetime
 
-from app.crud import meeting_crud, meeting_task_crud
-from app.models import Meeting, MeetingTask
+from app.models import Meeting, MeetingRecurrence
+from app.repositories.meeting_repository import MeetingRepository
 from app.schemas import meeting_schemas
-from app.services import meeting_recurrence_service
-from sqlalchemy import and_
+from dateutil.rrule import rrulestr
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 
-# Get the next meeting in the series whose start date is after the given date
-async def get_subsequent_meeting(
-    db: AsyncSession, meeting: Meeting, after_date: datetime = datetime.now()
-) -> Meeting:
-    if not meeting.recurrence_id:
-        raise ValueError(f"Meeting {meeting} does not have a recurrence set")
+# Create a new meeting
+async def create_meeting_service(
+    db: AsyncSession, meeting_data: meeting_schemas.MeetingCreate
+) -> meeting_schemas.MeetingRetrieve:
+    repo = MeetingRepository(db)
 
-    # Check if there's a meeting after the given date
-    result = await db.execute(
-        select(Meeting)
-        .filter(
-            and_(
-                Meeting.recurrence_id == meeting.recurrence_id,
-                Meeting.start_date > after_date,
+    # Validate recurrence_id if provided
+    if meeting_data.recurrence_id:
+        recurrence = await db.get(MeetingRecurrence, meeting_data.recurrence_id)
+        if not recurrence:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Recurrence with ID {meeting_data.recurrence_id} not found",
             )
+
+    # Create the meeting
+    meeting = await repo.create_with_recurrence(meeting_data.model_dump())
+
+    # Serialize and return the created meeting
+    return meeting_schemas.MeetingRetrieve.model_validate(meeting)
+
+
+# List all meetings
+async def get_meetings_service(
+    db: AsyncSession, skip: int = 0, limit: int = 10
+) -> list[meeting_schemas.MeetingRetrieve]:
+    repo = MeetingRepository(db)
+    meetings = await repo.get_all(skip=skip, limit=limit)
+    return [
+        meeting_schemas.MeetingRetrieve.model_validate(meeting) for meeting in meetings
+    ]
+
+
+# Get a meeting by ID
+async def get_meeting_service(
+    db: AsyncSession, meeting_id: int
+) -> meeting_schemas.MeetingRetrieve:
+    repo = MeetingRepository(db)
+    meeting = await repo.get_by_id_with_recurrence(meeting_id)
+    if not meeting:
+        raise ValueError("Meeting not found")
+    return meeting_schemas.MeetingRetrieve.model_validate(meeting)
+
+
+# Update a meeting
+async def update_meeting_service(
+    db: AsyncSession, meeting_id: int, meeting_data: meeting_schemas.MeetingUpdate
+) -> meeting_schemas.MeetingRetrieve:
+    repo = MeetingRepository(db)
+    meeting = await repo.get_by_id_with_recurrence(meeting_id)
+    if not meeting:
+        raise ValueError("Meeting not found")
+
+    for key, value in meeting_data.model_dump(exclude_unset=True).items():
+        setattr(meeting, key, value)
+
+    await db.commit()
+    await db.refresh(meeting)
+    return meeting_schemas.MeetingRetrieve.model_validate(meeting)
+
+
+# Delete a meeting
+async def delete_meeting_service(db: AsyncSession, meeting_id: int) -> bool:
+    repo = MeetingRepository(db)
+    meeting = await repo.get_by_id_with_recurrence(meeting_id)
+    if not meeting:
+        return False
+    await repo.delete(meeting_id)
+    return True
+
+
+# Complete a meeting
+async def complete_meeting_service(
+    db: AsyncSession, meeting_id: int
+) -> meeting_schemas.MeetingRetrieve:
+    repo = MeetingRepository(db)
+    meeting = await repo.get_by_id_with_recurrence(meeting_id)
+    if not meeting:
+        raise ValueError("Meeting not found")
+
+    meeting.completed = True
+    await db.commit()
+    await db.refresh(meeting)
+    return meeting_schemas.MeetingRetrieve.model_validate(meeting)
+
+
+# Add a recurrence to a meeting
+async def add_recurrence_service(
+    db: AsyncSession, meeting_id: int, recurrence_id: int
+) -> meeting_schemas.MeetingRetrieve:
+    repo = MeetingRepository(db)
+    meeting = await repo.get_by_id_with_recurrence(meeting_id)
+    if not meeting:
+        raise ValueError("Meeting not found")
+
+    meeting.recurrence_id = recurrence_id
+    await db.commit()
+    await db.refresh(meeting)
+    return meeting_schemas.MeetingRetrieve.model_validate(meeting)
+
+
+# Get the next meeting in the series
+async def get_subsequent_meeting_service(
+    db: AsyncSession, meeting_id: int, after_date: datetime = datetime.now()
+) -> meeting_schemas.MeetingRetrieve:
+    repo = MeetingRepository(db)
+
+    # Fetch the meeting and ensure it exists
+    meeting = await repo.get_by_id_with_recurrence(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail=f"Meeting {meeting_id} not found")
+
+    # Validate recurrence ID
+    if not meeting.recurrence_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Meeting {meeting_id} does not have a recurrence set",
         )
-        .order_by(Meeting.start_date.asc())
-    )
-    next_meeting = result.scalars().first()
 
-    # If there's no meeting after the given date, create the next meeting
+    # Fetch the recurrence object and validate
+    recurrence = await db.get(MeetingRecurrence, meeting.recurrence_id)
+    if not recurrence:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Recurrence with ID {meeting.recurrence_id} not found",
+        )
+
+    # Find the next meeting in the series
+    next_meeting = await repo.get_meetings_with_recurrence(
+        recurrence_id=meeting.recurrence_id, after_date=after_date
+    )
+
+    # If no future meeting exists, create the next one
     if not next_meeting:
-        return await create_subsequent_meeting(db, meeting)
+        next_meeting = await create_subsequent_meeting_service(db, meeting)
     else:
-        return next_meeting
+        next_meeting = next_meeting[0]
+
+    # Return the serialized meeting
+    return meeting_schemas.MeetingRetrieve.model_validate(next_meeting)
 
 
-async def create_subsequent_meeting(db: AsyncSession, meeting: Meeting) -> Meeting:
-    if not meeting or not meeting.recurrence:
-        return None  # TODO Handle error if meeting not found or recurrence not set
+# Create the next meeting in the series
+async def create_subsequent_meeting_service(
+    db: AsyncSession, meeting: Meeting
+) -> meeting_schemas.MeetingRetrieve:
+    repo = MeetingRepository(db)
 
-    next_meeting_date = await meeting_recurrence_service.get_next_meeting_date(
-        db, meeting.recurrence_id, meeting.start_date
-    )
+    # Validate the meeting object
+    if not meeting:
+        raise HTTPException(status_code=400, detail="Meeting is missing")
+    if not meeting.recurrence_id:
+        raise HTTPException(
+            status_code=400, detail="Meeting does not have a recurrence set"
+        )
+
+    # Fetch the recurrence object
+    recurrence = await db.get(MeetingRecurrence, meeting.recurrence_id)
+    if not recurrence:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recurrence with ID {meeting.recurrence_id} not found",
+        )
+
+    # Calculate the next meeting date using the recurrence rule
+    try:
+        rule = rrulestr(recurrence.rrule, dtstart=meeting.start_date)
+        next_meeting_date = rule.after(meeting.start_date, inc=False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Error parsing recurrence rule: {str(e)}"
+        )
+
     if not next_meeting_date:
-        return None  # TODO: Handle error if next meeting date not found
+        raise HTTPException(
+            status_code=400, detail="No future dates found in the recurrence rule"
+        )
 
-    # Calculate the end date based on the duration if applicable
-    if meeting.end_date and meeting.start_date:
-        duration = meeting.end_date - meeting.start_date
-        next_meeting_end_date = next_meeting_date + duration
-    else:
-        next_meeting_end_date = None
+    # Calculate the end date and duration
+    duration = meeting.end_date - meeting.start_date if meeting.end_date else None
+    next_meeting_end_date = next_meeting_date + duration if duration else None
 
-    # Create a MeetingCreate schema object
+    # Prepare the MeetingCreate schema
     meeting_data = meeting_schemas.MeetingCreate(
         title=meeting.title,
         start_date=next_meeting_date,
@@ -61,40 +198,9 @@ async def create_subsequent_meeting(db: AsyncSession, meeting: Meeting) -> Meeti
         duration=meeting.duration,
         location=meeting.location,
         notes=meeting.notes,
-        num_reschedules=0,
-        reminder_sent=False,
         recurrence_id=meeting.recurrence_id,
     )
 
-    # Use the meeting_crud to create the new meeting
-    new_meeting = await meeting_crud.create_meeting(db, meeting_data)
-    return new_meeting
-
-
-async def complete_meeting(db: AsyncSession, meeting_id: int) -> Meeting:
-    meeting = await meeting_crud.get_meeting(db, meeting_id)
-    if not meeting:
-        return None  # TODO: handle error if meeting not found
-
-    # Mark the meeting as completed
-    meeting.completed = True
-
-    # Retrieve tasks for the current meeting
-    meeting_tasks: list[MeetingTask] = meeting_task_crud.get_tasks_by_meeting(
-        db, meeting_id
-    )
-
-    # Assuming there's a function to find the next meeting in the series
-    next_meeting_id = await get_subsequent_meeting(db, meeting.recurrence_id)
-
-    # Update tasks if next meeting is available
-    if next_meeting_id:
-        for meeting_task in meeting_tasks:
-            if not meeting_task.completed:
-                meeting_task.meeting_id = next_meeting_id
-                # Add logic to update task status if necessary
-
-    # Commit all changes at once
-    await db.commit()
-    await db.refresh(meeting)
-    return meeting
+    # Create the new meeting using the repository
+    new_meeting = await repo.create(meeting_data.model_dump())
+    return meeting_schemas.MeetingRetrieve.model_validate(new_meeting)
