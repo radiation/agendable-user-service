@@ -16,7 +16,7 @@ class BaseRepository(Generic[ModelType]):
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
-    async def get_all(self, skip: int = 0, limit: int = 10):
+    async def get_all(self, skip: int = 0, limit: int = 10) -> list[ModelType]:
         stmt = select(self.model).offset(skip).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().all()

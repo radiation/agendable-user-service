@@ -14,8 +14,11 @@ class MeetingAttendeeCreate(MeetingAttendeeBase):
     pass
 
 
-class MeetingAttendeeUpdate(MeetingAttendeeBase):
-    pass
+class MeetingAttendeeUpdate(BaseModel):
+    model_config = {"from_attributes": True}
+    meeting_id: Optional[int] = None
+    user_id: Optional[int] = None
+    is_scheduler: Optional[bool] = None
 
 
 class MeetingAttendeeRetrieve(MeetingAttendeeBase):
