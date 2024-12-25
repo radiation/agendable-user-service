@@ -1,5 +1,14 @@
 import sqlalchemy.sql.functions as func
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, event
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    event,
+)
 from sqlalchemy.orm import relationship
 
 from . import Base
@@ -7,6 +16,11 @@ from . import Base
 
 class Meeting(Base):
     __tablename__ = "meetings"
+    __table_args__ = (
+        Index("ix_meeting_recurrence_id", "recurrence_id"),
+        Index("ix_meeting_start_date", "start_date"),
+        Index("ix_meeting_completed", "completed"),
+    )
 
     id = Column(Integer, primary_key=True)
     recurrence_id = Column(Integer, ForeignKey("meeting_recurrences.id"), nullable=True)

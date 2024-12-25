@@ -1,11 +1,16 @@
 import sqlalchemy.sql.functions as func
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String
 
 from . import Base
 
 
 class Task(Base):
     __tablename__ = "tasks"
+    __table_args__ = (
+        Index("ix_task_assignee_id", "assignee_id"),
+        Index("ix_task_due_date", "due_date"),
+        Index("ix_task_completed", "completed"),
+    )
 
     id = Column(Integer, primary_key=True)
     assignee_id = Column(Integer)

@@ -1,11 +1,16 @@
 import sqlalchemy.sql.functions as func
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer
 
 from . import Base
 
 
 class MeetingAttendee(Base):
     __tablename__ = "meeting_attendees"
+    __table_args__ = (
+        Index("ix_meeting_attendee_meeting_id", "meeting_id"),
+        Index("ix_meeting_attendee_user_id", "user_id"),
+        Index("ix_meeting_attendee_meeting_user", "meeting_id", "user_id"),
+    )
 
     id = Column(Integer, primary_key=True)
     meeting_id = Column(Integer, ForeignKey("meetings.id"))

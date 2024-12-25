@@ -1,5 +1,5 @@
 import sqlalchemy.sql.functions as func
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Index, Integer, String
 from sqlalchemy.orm import relationship
 
 from . import Base
@@ -17,6 +17,10 @@ FREQ=YEARLY;BYMONTH=6;BYMONTHDAY=24;BYHOUR=12;BYMINUTE=0
 
 class MeetingRecurrence(Base):
     __tablename__ = "meeting_recurrences"
+    __table_args__ = (
+        Index("ix_meeting_recurrence_rrule", "rrule"),
+        Index("ix_meeting_recurrence_created_at", "created_at"),
+    )
 
     id = Column(Integer, primary_key=True)
     title = Column(String(100), default="")
