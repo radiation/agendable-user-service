@@ -59,3 +59,23 @@ class MeetingRepository(BaseRepository[Meeting]):
             await self.db.commit()
             await self.db.refresh(meeting)
         return meeting
+
+    async def batch_create_with_recurrence(
+        self, recurrence_id: int, base_meeting: dict, dates: list[datetime]
+    ):
+        meetings = [
+            self.model(
+                recurrence_id=recurrence_id,
+                start_date=start_date,
+                end_date=start_date + base_meeting["duration"],
+                **{
+                    k: v
+                    for k, v in base_meeting.items()
+                    if k not in ["start_date", "end_date", "duration"]
+                }
+            )
+            for start_date in dates
+        ]
+        self.db.add_all(meetings)
+        await self.db.commit()
+        return meetings

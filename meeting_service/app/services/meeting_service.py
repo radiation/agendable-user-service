@@ -2,6 +2,7 @@ from datetime import datetime
 
 from app.errors import NotFoundError, ValidationError
 from app.models import Meeting, MeetingRecurrence
+from app.repositories.meeting_attendee_repository import MeetingAttendeeRepository
 from app.repositories.meeting_repository import MeetingRepository
 from app.schemas import meeting_schemas
 from dateutil.rrule import rrulestr
@@ -196,3 +197,38 @@ async def create_subsequent_meeting_service(
     # Create the new meeting using the repository
     new_meeting = await repo.create(meeting_data.model_dump())
     return meeting_schemas.MeetingRetrieve.model_validate(new_meeting)
+
+
+async def create_meeting_with_recurrence_and_attendees(
+    db: AsyncSession, meeting_data: dict, attendees: list[dict]
+):
+    async with db.begin():  # Starts a transaction
+        meeting_repo = MeetingRepository(db)
+        attendee_repo = MeetingAttendeeRepository(db)
+
+        # Create meeting
+        meeting = await meeting_repo.create_with_recurrence(meeting_data)
+
+        # Create attendees
+        for attendee_data in attendees:
+            attendee_data["meeting_id"] = meeting.id
+            await attendee_repo.create(attendee_data)
+
+        return meeting
+
+
+async def create_recurring_meetings_service(
+    db: AsyncSession, recurrence_id: int, base_meeting: dict, dates: list[datetime]
+):
+    repo = MeetingRepository(db)
+
+    # Ensure the recurrence exists
+    recurrence = await db.get(MeetingRecurrence, recurrence_id)
+    if not recurrence:
+        raise NotFoundError(detail=f"Recurrence with ID {recurrence_id} not found")
+
+    # Validate and create meetings
+    meetings = await repo.batch_create_with_recurrence(
+        recurrence_id, base_meeting, dates
+    )
+    return [meeting.model_dump() for meeting in meetings]

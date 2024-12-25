@@ -1,10 +1,11 @@
 from app.db import db
-from app.errors import ForbiddenError, NotFoundError, ValidationError
+from app.errors import NotFoundError, ValidationError
 from app.schemas import meeting_schemas
 from app.services.meeting_service import (
     add_recurrence_service,
     complete_meeting_service,
     create_meeting_service,
+    create_recurring_meetings_service,
     delete_meeting_service,
     get_meeting_service,
     get_meetings_service,
@@ -15,15 +16,6 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
-
-# Helper function to get user metadata from request headers
-def get_user_metadata(request: Request) -> dict:
-    user_id = request.headers.get("X-User-ID")
-    user_email = request.headers.get("X-User-Email")
-    if not user_id:
-        raise ForbiddenError(detail=f"User not {user_email} authenticated")
-    return {"id": user_id, "email": user_email}
-
 
 # Middleware to set the attendee for the request
 async def get_attendee(request: Request):
@@ -129,3 +121,16 @@ async def next_meeting(
     if not next_meeting:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return next_meeting
+
+
+@router.post(
+    "/recurring-meetings", response_model=list[meeting_schemas.MeetingRetrieve]
+)
+async def create_recurring_meetings(
+    recurrence_id: int,
+    meeting_data: meeting_schemas.MeetingCreateBatch,
+    db: AsyncSession = Depends(db.get_db),
+):
+    return await create_recurring_meetings_service(
+        db, recurrence_id, meeting_data.base_meeting, meeting_data.dates
+    )
