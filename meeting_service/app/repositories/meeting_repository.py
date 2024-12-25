@@ -13,7 +13,7 @@ class MeetingRepository(BaseRepository[Meeting]):
 
     async def get_meetings_with_recurrence(
         self, recurrence_id: int, after_date: datetime, skip: int = 0, limit: int = 10
-    ):
+    ) -> list[Meeting]:
         stmt = (
             select(self.model)
             .options(joinedload(Meeting.recurrence))
@@ -28,7 +28,7 @@ class MeetingRepository(BaseRepository[Meeting]):
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
-    async def get_by_id_with_recurrence(self, id: int):
+    async def get_by_id_with_recurrence(self, id: int) -> Meeting:
         stmt = (
             select(self.model)
             .options(joinedload(self.model.recurrence))
@@ -37,7 +37,7 @@ class MeetingRepository(BaseRepository[Meeting]):
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
-    async def create_with_recurrence(self, meeting_data: dict):
+    async def create_with_recurrence(self, meeting_data: dict) -> Meeting:
         new_meeting = self.model(**meeting_data)
         self.db.add(new_meeting)
         await self.db.commit()

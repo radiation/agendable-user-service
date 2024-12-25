@@ -24,8 +24,12 @@ class TaskUpdate(TaskBase):
     completed: Optional[bool] = None
 
 
-class TaskRetrieve(TaskBase):
-    title: str
-    assignee_id: int
-    completed: bool
+class TaskRetrieve(BaseModel):
     id: int
+    title: str
+    assignee_id: Optional[int]
+    completed: bool
+    completed_date: Optional[datetime] = None
+    due_date: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
