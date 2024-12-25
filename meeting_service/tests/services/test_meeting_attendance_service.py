@@ -1,4 +1,5 @@
 import pytest
+from app.errors import NotFoundError
 from app.models import MeetingAttendee
 from app.schemas.meeting_attendee_schemas import (
     MeetingAttendeeCreate,
@@ -12,7 +13,6 @@ from app.services.meeting_attendee_service import (
     get_meetings_by_user_service,
     update_meeting_attendee_service,
 )
-from fastapi import HTTPException
 
 
 @pytest.mark.asyncio
@@ -59,12 +59,15 @@ async def test_delete_meeting_attendee_service(test_client):
     db_session.add(attendee)
     await db_session.commit()
 
+    # Delete the attendee
     await delete_meeting_attendee_service(db_session, attendee.id)
 
     # Verify the attendee no longer exists
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(NotFoundError) as exc_info:
         await get_meeting_attendee_service(db_session, attendee.id)
-    assert exc_info.value.status_code == 404
+
+    # Assert the correct error message
+    assert exc_info.value.detail == f"Meeting attendee with ID {attendee.id} not found"
 
 
 @pytest.mark.asyncio

@@ -1,4 +1,5 @@
 from app.db import db
+from app.errors import NotFoundError
 from app.repositories.meeting_recurrence_repository import MeetingRecurrenceRepository
 from app.schemas import meeting_recurrence_schemas, meeting_schemas
 from app.services.meeting_recurrence_service import (
@@ -8,7 +9,7 @@ from app.services.meeting_recurrence_service import (
     get_recurrence_service,
     update_recurrence_service,
 )
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -78,7 +79,5 @@ async def delete_meeting_recurrence(
 async def next_meeting(recurrence_id: int, db: AsyncSession = Depends(db.get_db)):
     next_meeting_date = await get_next_meeting_date(db, recurrence_id)
     if not next_meeting_date:
-        raise HTTPException(
-            status_code=404, detail="No next meeting found or invalid recurrence"
-        )
+        raise NotFoundError(detail="No next meeting found or invalid recurrence")
     return next_meeting_date

@@ -1,9 +1,9 @@
 from datetime import datetime
 
+from app.errors import NotFoundError
 from app.repositories.meeting_recurrence_repository import MeetingRecurrenceRepository
 from app.schemas import meeting_recurrence_schemas
 from dateutil.rrule import rrulestr
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -24,7 +24,7 @@ async def get_recurrence_service(
     repo = MeetingRecurrenceRepository(db)
     recurrence = await repo.get_by_id(recurrence_id)
     if not recurrence:
-        raise HTTPException(status_code=404, detail="Recurrence not found")
+        raise NotFoundError(detail="Recurrence with ID {recurrence_id} not found")
     return meeting_recurrence_schemas.MeetingRecurrenceRetrieve.model_validate(
         recurrence
     )
@@ -38,7 +38,7 @@ async def update_recurrence_service(
     repo = MeetingRecurrenceRepository(db)
     recurrence = await repo.get_by_id(recurrence_id)
     if not recurrence:
-        raise HTTPException(status_code=404, detail="Recurrence not found")
+        raise NotFoundError(detail="Recurrence with ID {recurrence_id} not found")
 
     for key, value in recurrence_data.model_dump(exclude_unset=True).items():
         setattr(recurrence, key, value)
@@ -54,7 +54,7 @@ async def delete_recurrence_service(db: AsyncSession, recurrence_id: int) -> boo
     repo = MeetingRecurrenceRepository(db)
     recurrence = await repo.get_by_id(recurrence_id)
     if not recurrence:
-        raise HTTPException(status_code=404, detail="Recurrence not found")
+        raise NotFoundError(detail="Recurrence with ID {recurrence_id} not found")
 
     await repo.delete(recurrence_id)
     return True

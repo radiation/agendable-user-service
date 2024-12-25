@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from app.errors import NotFoundError
 from app.models import MeetingTask
 from app.repositories.task_repository import TaskRepository
 from app.schemas.task_schemas import TaskCreate, TaskRetrieve, TaskUpdate
@@ -7,7 +8,6 @@ from app.services.meeting_service import (
     get_meeting_service,
     get_subsequent_meeting_service,
 )
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -21,7 +21,7 @@ async def get_task_service(db: AsyncSession, task_id: int) -> TaskRetrieve:
     repo = TaskRepository(db)
     task = await repo.get_by_id(task_id)
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise NotFoundError(detail=f"Task with ID {task_id} not found")
     return TaskRetrieve.model_validate(task)
 
 
@@ -31,7 +31,7 @@ async def update_task_service(
     repo = TaskRepository(db)
     task = await repo.update(task_id, update_data.model_dump(exclude_unset=True))
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise NotFoundError(detail=f"Task with ID {task_id} not found")
     return TaskRetrieve.model_validate(task)
 
 
@@ -39,7 +39,7 @@ async def delete_task_service(db: AsyncSession, task_id: int) -> bool:
     repo = TaskRepository(db)
     success = await repo.delete(task_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise NotFoundError(detail=f"Task with ID {task_id} not found")
     return success
 
 
@@ -55,9 +55,7 @@ async def mark_task_complete_service(db: AsyncSession, task_id: int) -> TaskRetr
     repo = TaskRepository(db)
     task = await repo.mark_task_complete(task_id)
     if not task:
-        raise HTTPException(
-            status_code=404, detail="Task not found or already completed"
-        )
+        raise NotFoundError(detail=f"Task with ID {task_id} not found")
     return TaskRetrieve.model_validate(task)
 
 
@@ -72,7 +70,7 @@ async def create_new_meeting_task(
     # Fetch the meeting
     meeting = await get_meeting_service(db, meeting_id)
     if not meeting:
-        raise ValueError(f"Meeting with ID {meeting_id} not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
     # Determine the due date for the task
     if not due_date:

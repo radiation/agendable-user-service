@@ -1,10 +1,10 @@
 from datetime import datetime
 
+from app.errors import NotFoundError, ValidationError
 from app.models import Meeting, MeetingRecurrence
 from app.repositories.meeting_repository import MeetingRepository
 from app.schemas import meeting_schemas
 from dateutil.rrule import rrulestr
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -18,9 +18,8 @@ async def create_meeting_service(
     if meeting_data.recurrence_id:
         recurrence = await db.get(MeetingRecurrence, meeting_data.recurrence_id)
         if not recurrence:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Recurrence with ID {meeting_data.recurrence_id} not found",
+            raise ValidationError(
+                detail=f"Recurrence with ID {meeting_data.recurrence_id} not found"
             )
 
     # Create the meeting
@@ -48,7 +47,7 @@ async def get_meeting_service(
     repo = MeetingRepository(db)
     meeting = await repo.get_by_id_with_recurrence(meeting_id)
     if not meeting:
-        raise ValueError("Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return meeting_schemas.MeetingRetrieve.model_validate(meeting)
 
 
@@ -59,7 +58,7 @@ async def update_meeting_service(
     repo = MeetingRepository(db)
     meeting = await repo.get_by_id_with_recurrence(meeting_id)
     if not meeting:
-        raise ValueError("Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
     for key, value in meeting_data.model_dump(exclude_unset=True).items():
         setattr(meeting, key, value)
@@ -86,7 +85,7 @@ async def complete_meeting_service(
     repo = MeetingRepository(db)
     meeting = await repo.get_by_id_with_recurrence(meeting_id)
     if not meeting:
-        raise ValueError("Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
     meeting.completed = True
     await db.commit()
@@ -101,7 +100,7 @@ async def add_recurrence_service(
     repo = MeetingRepository(db)
     meeting = await repo.get_by_id_with_recurrence(meeting_id)
     if not meeting:
-        raise ValueError("Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
     meeting.recurrence_id = recurrence_id
     await db.commit()
@@ -118,21 +117,19 @@ async def get_subsequent_meeting_service(
     # Fetch the meeting and ensure it exists
     meeting = await repo.get_by_id_with_recurrence(meeting_id)
     if not meeting:
-        raise HTTPException(status_code=404, detail=f"Meeting {meeting_id} not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
     # Validate recurrence ID
     if not meeting.recurrence_id:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Meeting {meeting_id} does not have a recurrence set",
+        raise ValidationError(
+            detail=f"Meeting {meeting_id} does not have a recurrence set"
         )
 
     # Fetch the recurrence object and validate
     recurrence = await db.get(MeetingRecurrence, meeting.recurrence_id)
     if not recurrence:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Recurrence with ID {meeting.recurrence_id} not found",
+        raise NotFoundError(
+            detail=f"Recurrence with ID {meeting.recurrence_id} not found"
         )
 
     # Find the next meeting in the series
@@ -158,18 +155,17 @@ async def create_subsequent_meeting_service(
 
     # Validate the meeting object
     if not meeting:
-        raise HTTPException(status_code=400, detail="Meeting is missing")
+        raise NotFoundError(detail="Meeting not found")
     if not meeting.recurrence_id:
-        raise HTTPException(
-            status_code=400, detail="Meeting does not have a recurrence set"
+        raise ValidationError(
+            detail=f"Meeting with ID {meeting.id} does not have a recurrence set"
         )
 
     # Fetch the recurrence object
     recurrence = await db.get(MeetingRecurrence, meeting.recurrence_id)
     if not recurrence:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Recurrence with ID {meeting.recurrence_id} not found",
+        raise NotFoundError(
+            detail=f"Recurrence with ID {meeting.recurrence_id} not found"
         )
 
     # Calculate the next meeting date using the recurrence rule
@@ -177,14 +173,10 @@ async def create_subsequent_meeting_service(
         rule = rrulestr(recurrence.rrule, dtstart=meeting.start_date)
         next_meeting_date = rule.after(meeting.start_date, inc=False)
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error parsing recurrence rule: {str(e)}"
-        )
+        raise ValidationError(detail=f"Error parsing recurrence rule: {str(e)}")
 
     if not next_meeting_date:
-        raise HTTPException(
-            status_code=400, detail="No future dates found in the recurrence rule"
-        )
+        raise ValidationError(detail="No future dates found in the recurrence rule")
 
     # Calculate the end date and duration
     duration = meeting.end_date - meeting.start_date if meeting.end_date else None

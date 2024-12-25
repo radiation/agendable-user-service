@@ -1,10 +1,10 @@
+from app.errors import NotFoundError
 from app.repositories.meeting_attendee_repository import MeetingAttendeeRepository
 from app.schemas.meeting_attendee_schemas import (
     MeetingAttendeeCreate,
     MeetingAttendeeRetrieve,
     MeetingAttendeeUpdate,
 )
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -30,7 +30,9 @@ async def get_meeting_attendee_service(
     repo = MeetingAttendeeRepository(db)
     attendee = await repo.get_by_id(meeting_attendee_id)
     if not attendee:
-        raise HTTPException(status_code=404, detail="Meeting attendee not found")
+        raise NotFoundError(
+            detail=f"Meeting attendee with ID {meeting_attendee_id} not found"
+        )
     return MeetingAttendeeRetrieve.model_validate(attendee)
 
 
@@ -42,7 +44,9 @@ async def update_meeting_attendee_service(
         meeting_attendee_id, update_data.model_dump(exclude_unset=True)
     )
     if not attendee:
-        raise HTTPException(status_code=404, detail="Meeting attendee not found")
+        raise NotFoundError(
+            detail=f"Meeting attendee with ID {meeting_attendee_id} not found"
+        )
     return MeetingAttendeeRetrieve.model_validate(attendee)
 
 
@@ -52,7 +56,9 @@ async def delete_meeting_attendee_service(
     repo = MeetingAttendeeRepository(db)
     success = await repo.delete(meeting_attendee_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Meeting attendee not found")
+        raise NotFoundError(
+            detail=f"Meeting attendee with ID {meeting_attendee_id} not found"
+        )
     return success
 
 

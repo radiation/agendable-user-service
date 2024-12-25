@@ -1,14 +1,15 @@
 import re
 
-from app.crud.meeting_attendee import get_meeting_attendee
 from app.db import get_db
-from app.utils import get_user_metadata
-from fastapi import HTTPException, Request
+from app.errors import ForbiddenError, ValidationError
+from app.services.meeting_attendee_service import get_meeting_attendee_service
+from app.utils.auth import get_user_metadata
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def extract_meeting_id(path: str) -> int:
-    # Assuming meeting ID is part of the path, e.g., /meetings/{meeting_id}
+    """Extracts the meeting ID from the request path."""
     match = re.search(r"/meetings/(\d+)", path)
     if match:
         return int(match.group(1))
@@ -16,29 +17,32 @@ async def extract_meeting_id(path: str) -> int:
 
 
 async def meeting_permission_middleware(request: Request, call_next):
+    """Middleware to enforce meeting-specific permissions."""
     if request.url.path.startswith("/meetings/") and request.method != "POST":
+        # Extract user metadata
         user_metadata = get_user_metadata(request)
-        user_id = user_metadata["user_id"]
+        user_id = user_metadata.get("user_id")
+        if not user_id:
+            raise ValidationError(detail="User ID is missing in request metadata.")
 
-        # Attach user_id to the request for downstream access
+        # Attach user_id to the request state
         request.state.user_id = user_id
 
         # Extract meeting_id from the path
         meeting_id = await extract_meeting_id(request.url.path)
         if not meeting_id:
-            raise HTTPException(status_code=400, detail="Invalid meeting ID in path.")
+            raise ValidationError(detail="Invalid meeting ID in path.")
 
-        # Validate attendee
+        # Validate attendee via service layer
         db: AsyncSession = await get_db()
-        attendee = await get_meeting_attendee(
-            db=db, meeting_id=meeting_id, user_id=user_id
-        )
-        if not attendee:
-            raise HTTPException(
-                status_code=403, detail="You are not authorized to access this meeting."
+        try:
+            attendee = await get_meeting_attendee_service(db, meeting_id, user_id)
+        except Exception:
+            raise ForbiddenError(
+                detail="You are not authorized to access this meeting."
             )
 
-        # Attach attendee to the request for downstream access
+        # Attach attendee to the request state
         request.state.attendee = attendee
 
     return await call_next(request)

@@ -1,4 +1,5 @@
 from app.db import db
+from app.errors import ForbiddenError, NotFoundError, ValidationError
 from app.schemas import meeting_schemas
 from app.services.meeting_service import (
     add_recurrence_service,
@@ -10,7 +11,7 @@ from app.services.meeting_service import (
     get_subsequent_meeting_service,
     update_meeting_service,
 )
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
@@ -20,7 +21,7 @@ def get_user_metadata(request: Request) -> dict:
     user_id = request.headers.get("X-User-ID")
     user_email = request.headers.get("X-User-Email")
     if not user_id:
-        raise HTTPException(status_code=403, detail="User not authenticated")
+        raise ForbiddenError(detail=f"User not {user_email} authenticated")
     return {"id": user_id, "email": user_email}
 
 
@@ -38,7 +39,7 @@ async def create_meeting(
     try:
         return await create_meeting_service(db, meeting)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationError(detail=str(e))
 
 
 # List all meetings
@@ -58,7 +59,7 @@ async def get_meeting(
 ) -> meeting_schemas.MeetingRetrieve:
     meeting = await get_meeting_service(db, meeting_id)
     if not meeting:
-        raise HTTPException(status_code=404, detail="Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
     # Add attendee-specific data (e.g., private notes)
     meeting_data = meeting_schemas.MeetingRetrieve.model_validate(meeting).model_dump()
@@ -76,7 +77,7 @@ async def update_meeting(
 ) -> meeting_schemas.MeetingRetrieve:
     updated_meeting = await update_meeting_service(db, meeting_id, meeting)
     if updated_meeting is None:
-        raise HTTPException(status_code=404, detail="Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return updated_meeting
 
 
@@ -85,7 +86,7 @@ async def update_meeting(
 async def delete_meeting(meeting_id: int, db: AsyncSession = Depends(db.get_db)):
     success = await delete_meeting_service(db, meeting_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
 
 # Complete a meeting and roll tasks over to the next occurrence
@@ -96,8 +97,8 @@ async def complete_meeting_route(
 ) -> meeting_schemas.MeetingRetrieve:
     completed_meeting = await complete_meeting_service(db, meeting_id)
     if not completed_meeting:
-        raise HTTPException(
-            status_code=404, detail="Meeting not found or already completed"
+        raise NotFoundError(
+            detail=f"Meeting with ID {meeting_id} not found or already completed"
         )
     return completed_meeting
 
@@ -114,7 +115,7 @@ async def add_recurrence(
 ) -> meeting_schemas.MeetingRetrieve:
     meeting = await add_recurrence_service(db, meeting_id, recurrence_id)
     if meeting is None:
-        raise HTTPException(status_code=404, detail="Meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return meeting
 
 
@@ -126,5 +127,5 @@ async def next_meeting(
 ) -> meeting_schemas.MeetingRetrieve:
     next_meeting = await get_subsequent_meeting_service(db, meeting_id)
     if not next_meeting:
-        raise HTTPException(status_code=404, detail="Next meeting not found")
+        raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return next_meeting

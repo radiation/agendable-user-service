@@ -1,3 +1,4 @@
+from app.errors import NotFoundError
 from app.repositories.meeting_task_repository import MeetingTaskRepository
 from app.schemas.meeting_task_schemas import (
     MeetingTaskCreate,
@@ -5,7 +6,6 @@ from app.schemas.meeting_task_schemas import (
     MeetingTaskUpdate,
 )
 from app.schemas.task_schemas import TaskRetrieve
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -23,7 +23,7 @@ async def get_meeting_task_service(
     repo = MeetingTaskRepository(db)
     meeting_task = await repo.get_by_id(meeting_task_id)
     if not meeting_task:
-        raise HTTPException(status_code=404, detail="Meeting task not found")
+        raise NotFoundError(detail=f"MeetingTask with ID {meeting_task_id} not found")
     return MeetingTaskRetrieve.model_validate(meeting_task)
 
 
@@ -43,7 +43,7 @@ async def update_meeting_task_service(
         meeting_task_id, update_data.model_dump(exclude_unset=True)
     )
     if not meeting_task:
-        raise HTTPException(status_code=404, detail="Meeting task not found")
+        raise NotFoundError(detail=f"MeetingTask with ID {meeting_task_id} not found")
     return MeetingTaskRetrieve.model_validate(meeting_task)
 
 
@@ -51,7 +51,7 @@ async def delete_meeting_task_service(db: AsyncSession, meeting_task_id: int) ->
     repo = MeetingTaskRepository(db)
     success = await repo.delete(meeting_task_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Meeting task not found")
+        raise NotFoundError(detail=f"MeetingTask with ID {meeting_task_id} not found")
     return success
 
 
