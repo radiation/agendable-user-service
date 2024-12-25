@@ -57,11 +57,11 @@ services:
       - web
       - postgres
 
-  rabbitmq:
-    image: "rabbitmq:3-management"
+  redis:
+    image: redis:latest
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "15672:15672"  # Management UI
-      - "5672:5672"    # Application connection port
+      - "6379:6379"
     networks:
       - web
 
