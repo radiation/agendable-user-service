@@ -4,8 +4,7 @@ from app.repositories.meeting_recurrence_repository import MeetingRecurrenceRepo
 
 
 @pytest.mark.asyncio
-async def test_create_meeting_recurrence(test_client):
-    client, db_session = test_client
+async def test_create_meeting_recurrence(db_session):
     repo = MeetingRecurrenceRepository(db_session)
 
     new_recurrence = {
@@ -18,8 +17,7 @@ async def test_create_meeting_recurrence(test_client):
 
 
 @pytest.mark.asyncio
-async def test_get_meeting_recurrence(test_client):
-    client, db_session = test_client
+async def test_get_meeting_recurrence(db_session):
     repo = MeetingRecurrenceRepository(db_session)
 
     # Create a test recurrence
@@ -36,8 +34,7 @@ async def test_get_meeting_recurrence(test_client):
 
 
 @pytest.mark.asyncio
-async def test_delete_meeting_recurrence(test_client):
-    client, db_session = test_client
+async def test_delete_meeting_recurrence(db_session):
     repo = MeetingRecurrenceRepository(db_session)
 
     # Create a test recurrence

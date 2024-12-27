@@ -1,18 +1,9 @@
 from typing import List
 
-from app.db import db
+from app.core.dependencies import get_meeting_attendee_service
 from app.schemas import meeting_attendee_schemas, meeting_schemas
-from app.services.meeting_attendee_service import (
-    create_meeting_attendee_service,
-    delete_meeting_attendee_service,
-    get_attendees_by_meeting_service,
-    get_meeting_attendee_service,
-    get_meeting_attendees_service,
-    get_meetings_by_user_service,
-    update_meeting_attendee_service,
-)
+from app.services.meeting_attendee_service import MeetingAttendeeService
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -20,16 +11,18 @@ router = APIRouter()
 @router.post("/", response_model=meeting_attendee_schemas.MeetingAttendeeRetrieve)
 async def create_meeting_attendee(
     attendee: meeting_attendee_schemas.MeetingAttendeeCreate,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingAttendeeService = Depends(get_meeting_attendee_service),
 ) -> meeting_attendee_schemas.MeetingAttendeeRetrieve:
-    return await create_meeting_attendee_service(db, attendee)
+    return await service.create_meeting_attendee(attendee)
 
 
 @router.get("/", response_model=List[meeting_attendee_schemas.MeetingAttendeeRetrieve])
 async def get_meeting_attendees(
-    skip: int = 0, limit: int = 10, db: AsyncSession = Depends(db.get_db)
+    skip: int = 0,
+    limit: int = 10,
+    service: MeetingAttendeeService = Depends(get_meeting_attendee_service),
 ) -> List[meeting_attendee_schemas.MeetingAttendeeRetrieve]:
-    return await get_meeting_attendees_service(db, skip, limit)
+    return await service.get_meeting_attendees(skip, limit)
 
 
 @router.get(
@@ -37,9 +30,10 @@ async def get_meeting_attendees(
     response_model=meeting_attendee_schemas.MeetingAttendeeRetrieve,
 )
 async def get_meeting_attendee(
-    meeting_attendee_id: int, db: AsyncSession = Depends(db.get_db)
+    meeting_attendee_id: int,
+    service: MeetingAttendeeService = Depends(get_meeting_attendee_service),
 ) -> meeting_attendee_schemas.MeetingAttendeeRetrieve:
-    return await get_meeting_attendee_service(db, meeting_attendee_id)
+    return await service.get_meeting_attendee(meeting_attendee_id)
 
 
 @router.put(
@@ -49,16 +43,17 @@ async def get_meeting_attendee(
 async def update_meeting_attendee(
     meeting_attendee_id: int,
     attendee: meeting_attendee_schemas.MeetingAttendeeUpdate,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingAttendeeService = Depends(get_meeting_attendee_service),
 ) -> meeting_attendee_schemas.MeetingAttendeeRetrieve:
-    return await update_meeting_attendee_service(db, meeting_attendee_id, attendee)
+    return await service.update_meeting_attendee(meeting_attendee_id, attendee)
 
 
 @router.delete("/{meeting_attendee_id}", status_code=204)
 async def delete_meeting_attendee(
-    meeting_attendee_id: int, db: AsyncSession = Depends(db.get_db)
+    meeting_attendee_id: int,
+    service: MeetingAttendeeService = Depends(get_meeting_attendee_service),
 ):
-    return await delete_meeting_attendee_service(db, meeting_attendee_id)
+    return await service.delete_meeting_attendee(meeting_attendee_id)
 
 
 @router.get(
@@ -66,15 +61,17 @@ async def delete_meeting_attendee(
     response_model=List[meeting_attendee_schemas.MeetingAttendeeRetrieve],
 )
 async def get_attendees_by_meeting(
-    meeting_id: int, db: AsyncSession = Depends(db.get_db)
+    meeting_id: int,
+    service: MeetingAttendeeService = Depends(get_meeting_attendee_service),
 ) -> List[meeting_attendee_schemas.MeetingAttendeeRetrieve]:
-    return await get_attendees_by_meeting_service(db, meeting_id)
+    return await service.get_attendees_by_meeting(meeting_id)
 
 
 @router.get(
     "/user_meetings/{user_id}", response_model=List[meeting_schemas.MeetingRetrieve]
 )
 async def get_meetings_by_user(
-    user_id: int, db: AsyncSession = Depends(db.get_db)
+    user_id: int,
+    service: MeetingAttendeeService = Depends(get_meeting_attendee_service),
 ) -> List[meeting_schemas.MeetingRetrieve]:
-    return await get_meetings_by_user_service(db, user_id)
+    return await service.get_meetings_by_user(user_id)

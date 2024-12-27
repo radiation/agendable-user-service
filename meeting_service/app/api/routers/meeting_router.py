@@ -1,19 +1,8 @@
-from app.db import db
+from app.core.dependencies import get_meeting_service
 from app.errors import NotFoundError, ValidationError
 from app.schemas import meeting_schemas
-from app.services.meeting_service import (
-    add_recurrence_service,
-    complete_meeting_service,
-    create_meeting_service,
-    create_recurring_meetings_service,
-    delete_meeting_service,
-    get_meeting_service,
-    get_meetings_service,
-    get_subsequent_meeting_service,
-    update_meeting_service,
-)
+from app.services.meeting_service import MeetingService
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -26,10 +15,10 @@ async def get_attendee(request: Request):
 @router.post("/", response_model=meeting_schemas.MeetingRetrieve)
 async def create_meeting(
     meeting: meeting_schemas.MeetingCreate,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingService = Depends(get_meeting_service),
 ) -> meeting_schemas.MeetingRetrieve:
     try:
-        return await create_meeting_service(db, meeting)
+        return await service.create_meeting(meeting)
     except Exception as e:
         raise ValidationError(detail=str(e))
 
@@ -37,19 +26,21 @@ async def create_meeting(
 # List all meetings
 @router.get("/", response_model=list[meeting_schemas.MeetingRetrieve])
 async def get_meetings(
-    skip: int = 0, limit: int = 10, db: AsyncSession = Depends(db.get_db)
+    skip: int = 0,
+    limit: int = 10,
+    service: MeetingService = Depends(get_meeting_service),
 ) -> list[meeting_schemas.MeetingRetrieve]:
-    return await get_meetings_service(db, skip, limit)
+    return await service.list_meetings(skip, limit)
 
 
 # Get a meeting by ID
 @router.get("/{meeting_id}", response_model=meeting_schemas.MeetingRetrieve)
 async def get_meeting(
     meeting_id: int,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingService = Depends(get_meeting_service),
     attendee: dict = Depends(get_attendee),
 ) -> meeting_schemas.MeetingRetrieve:
-    meeting = await get_meeting_service(db, meeting_id)
+    meeting = await service.get_meeting(meeting_id)
     if not meeting:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
@@ -65,9 +56,9 @@ async def get_meeting(
 async def update_meeting(
     meeting_id: int,
     meeting: meeting_schemas.MeetingUpdate,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingService = Depends(get_meeting_service),
 ) -> meeting_schemas.MeetingRetrieve:
-    updated_meeting = await update_meeting_service(db, meeting_id, meeting)
+    updated_meeting = await service.update_meeting(meeting_id, meeting)
     if updated_meeting is None:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return updated_meeting
@@ -75,8 +66,10 @@ async def update_meeting(
 
 # Delete a meeting
 @router.delete("/{meeting_id}", status_code=204)
-async def delete_meeting(meeting_id: int, db: AsyncSession = Depends(db.get_db)):
-    success = await delete_meeting_service(db, meeting_id)
+async def delete_meeting(
+    meeting_id: int, service: MeetingService = Depends(get_meeting_service)
+):
+    success = await service.delete_meeting(meeting_id)
     if not success:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
@@ -85,9 +78,9 @@ async def delete_meeting(meeting_id: int, db: AsyncSession = Depends(db.get_db))
 @router.post("/{meeting_id}/complete/", response_model=meeting_schemas.MeetingRetrieve)
 async def complete_meeting_route(
     meeting_id: int,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingService = Depends(get_meeting_service),
 ) -> meeting_schemas.MeetingRetrieve:
-    completed_meeting = await complete_meeting_service(db, meeting_id)
+    completed_meeting = await service.complete_meeting(meeting_id)
     if not completed_meeting:
         raise NotFoundError(
             detail=f"Meeting with ID {meeting_id} not found or already completed"
@@ -103,9 +96,9 @@ async def complete_meeting_route(
 async def add_recurrence(
     meeting_id: int,
     recurrence_id: int,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingService = Depends(get_meeting_service),
 ) -> meeting_schemas.MeetingRetrieve:
-    meeting = await add_recurrence_service(db, meeting_id, recurrence_id)
+    meeting = await service.add_recurrence(meeting_id, recurrence_id)
     if meeting is None:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return meeting
@@ -115,9 +108,9 @@ async def add_recurrence(
 @router.get("/{meeting_id}/next/", response_model=meeting_schemas.MeetingRetrieve)
 async def next_meeting(
     meeting_id: int,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingService = Depends(get_meeting_service),
 ) -> meeting_schemas.MeetingRetrieve:
-    next_meeting = await get_subsequent_meeting_service(db, meeting_id)
+    next_meeting = await service.get_subsequent_meeting(meeting_id)
     if not next_meeting:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return next_meeting
@@ -129,8 +122,8 @@ async def next_meeting(
 async def create_recurring_meetings(
     recurrence_id: int,
     meeting_data: meeting_schemas.MeetingCreateBatch,
-    db: AsyncSession = Depends(db.get_db),
+    service: MeetingService = Depends(get_meeting_service),
 ):
-    return await create_recurring_meetings_service(
-        db, recurrence_id, meeting_data.base_meeting, meeting_data.dates
+    return await service.create_recurring_meetings(
+        recurrence_id, meeting_data.base_meeting, meeting_data.dates
     )

@@ -4,8 +4,7 @@ from app.repositories.meeting_attendee_repository import MeetingAttendeeReposito
 
 
 @pytest.mark.asyncio
-async def test_create_meeting_attendee(test_client):
-    client, db_session = test_client
+async def test_create_meeting_attendee(db_session):
     repo = MeetingAttendeeRepository(db_session)
 
     new_attendee = {
@@ -20,8 +19,7 @@ async def test_create_meeting_attendee(test_client):
 
 
 @pytest.mark.asyncio
-async def test_get_meeting_attendee_by_id(test_client):
-    client, db_session = test_client
+async def test_get_meeting_attendee_by_id(db_session):
     repo = MeetingAttendeeRepository(db_session)
 
     attendee = MeetingAttendee(meeting_id=1, user_id=2, is_scheduler=False)
@@ -35,8 +33,7 @@ async def test_get_meeting_attendee_by_id(test_client):
 
 
 @pytest.mark.asyncio
-async def test_update_meeting_attendee(test_client):
-    client, db_session = test_client
+async def test_update_meeting_attendee(db_session):
     repo = MeetingAttendeeRepository(db_session)
 
     attendee = MeetingAttendee(meeting_id=1, user_id=3, is_scheduler=False)
@@ -49,8 +46,7 @@ async def test_update_meeting_attendee(test_client):
 
 
 @pytest.mark.asyncio
-async def test_delete_meeting_attendee(test_client):
-    client, db_session = test_client
+async def test_delete_meeting_attendee(db_session):
     repo = MeetingAttendeeRepository(db_session)
 
     attendee = MeetingAttendee(meeting_id=1, user_id=4, is_scheduler=False)

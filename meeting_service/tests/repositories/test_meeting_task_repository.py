@@ -4,8 +4,7 @@ from app.repositories.meeting_task_repository import MeetingTaskRepository
 
 
 @pytest.mark.asyncio
-async def test_create_meeting_task(test_client):
-    client, db_session = test_client
+async def test_create_meeting_task(db_session):
     repo = MeetingTaskRepository(db_session)
 
     new_task = await repo.create({"meeting_id": 1, "task_id": 1})
@@ -17,8 +16,7 @@ async def test_create_meeting_task(test_client):
 
 
 @pytest.mark.asyncio
-async def test_get_meeting_task_by_id(test_client):
-    client, db_session = test_client
+async def test_get_meeting_task_by_id(db_session):
     repo = MeetingTaskRepository(db_session)
 
     meeting_task = MeetingTask(meeting_id=1, task_id=2)
@@ -31,8 +29,7 @@ async def test_get_meeting_task_by_id(test_client):
 
 
 @pytest.mark.asyncio
-async def test_get_tasks_by_meeting(test_client):
-    client, db_session = test_client
+async def test_get_tasks_by_meeting(db_session):
     repo = MeetingTaskRepository(db_session)
 
     task1 = Task(id=1, title="Task 1")
@@ -48,8 +45,7 @@ async def test_get_tasks_by_meeting(test_client):
 
 
 @pytest.mark.asyncio
-async def test_delete_meeting_task(test_client):
-    client, db_session = test_client
+async def test_delete_meeting_task(db_session):
     repo = MeetingTaskRepository(db_session)
 
     meeting_task = MeetingTask(meeting_id=1, task_id=3)

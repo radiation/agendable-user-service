@@ -15,7 +15,7 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     title: str
     assignee_id: int
-    completed: bool
+    completed: Optional[bool] = False
 
 
 class TaskUpdate(TaskBase):

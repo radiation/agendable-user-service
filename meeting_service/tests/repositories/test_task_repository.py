@@ -4,8 +4,7 @@ from app.repositories.task_repository import TaskRepository
 
 
 @pytest.mark.asyncio
-async def test_create_task(test_client):
-    client, db_session = test_client
+async def test_create_task(db_session):
     repo = TaskRepository(db_session)
 
     new_task = await repo.create({"title": "New Task"})
@@ -16,8 +15,7 @@ async def test_create_task(test_client):
 
 
 @pytest.mark.asyncio
-async def test_get_task_by_id(test_client):
-    client, db_session = test_client
+async def test_get_task_by_id(db_session):
     repo = TaskRepository(db_session)
 
     task = Task(title="Task 1")
@@ -30,8 +28,7 @@ async def test_get_task_by_id(test_client):
 
 
 @pytest.mark.asyncio
-async def test_update_task(test_client):
-    client, db_session = test_client
+async def test_update_task(db_session):
     repo = TaskRepository(db_session)
 
     task = Task(title="Task 1")
@@ -43,8 +40,7 @@ async def test_update_task(test_client):
 
 
 @pytest.mark.asyncio
-async def test_delete_task(test_client):
-    client, db_session = test_client
+async def test_delete_task(db_session):
     repo = TaskRepository(db_session)
 
     task = Task(title="Task 1")
@@ -57,8 +53,7 @@ async def test_delete_task(test_client):
 
 
 @pytest.mark.asyncio
-async def test_get_all_tasks(test_client):
-    client, db_session = test_client
+async def test_get_all_tasks(db_session):
     repo = TaskRepository(db_session)
 
     task1 = Task(title="Task 1")
