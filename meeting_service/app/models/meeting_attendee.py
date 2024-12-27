@@ -1,5 +1,6 @@
 import sqlalchemy.sql.functions as func
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer
+from sqlalchemy.orm import relationship
 
 from . import Base
 
@@ -17,3 +18,6 @@ class MeetingAttendee(Base):
     user_id = Column(Integer)
     is_scheduler = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationship
+    meeting = relationship("Meeting", back_populates="attendees")

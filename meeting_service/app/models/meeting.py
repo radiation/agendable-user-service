@@ -35,10 +35,11 @@ class Meeting(Base):
     completed = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationship
+    # Relationships
     recurrence = relationship(
         "MeetingRecurrence", back_populates="meetings", lazy="select"
     )
+    attendees = relationship("MeetingAttendee", back_populates="meeting", lazy="joined")
 
 
 @event.listens_for(Meeting, "before_insert")

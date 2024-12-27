@@ -1,7 +1,8 @@
-from typing import Generic, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 ModelType = TypeVar("ModelType")
 
@@ -13,13 +14,39 @@ class BaseRepository(Generic[ModelType]):
 
     async def get_by_id(self, id: int) -> ModelType:
         stmt = select(self.model).filter(self.model.id == id)
+
+        # Add eager loading for common relationships if applicable
+        if hasattr(self.model, "attendees"):
+            stmt = stmt.options(joinedload(self.model.attendees))
+        if hasattr(self.model, "recurrence"):
+            stmt = stmt.options(joinedload(self.model.recurrence))
+
         result = await self.db.execute(stmt)
-        return result.scalars().first()
+        return result.unique().scalar()
 
     async def get_all(self, skip: int = 0, limit: int = 10) -> list[ModelType]:
         stmt = select(self.model).offset(skip).limit(limit)
+
+        # Add eager loading for relationships if applicable
+        if hasattr(self.model, "attendees"):
+            stmt = stmt.options(joinedload(self.model.attendees))
+        if hasattr(self.model, "recurrence"):
+            stmt = stmt.options(joinedload(self.model.recurrence))
+
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return result.unique().scalars().all()
+
+    async def get_by_field(self, field_name: str, value: Any) -> ModelType:
+        stmt = select(self.model).filter(getattr(self.model, field_name) == value)
+
+        # Add eager loading for common relationships if applicable
+        if hasattr(self.model, "attendees"):
+            stmt = stmt.options(joinedload(self.model.attendees))
+        if hasattr(self.model, "recurrence"):
+            stmt = stmt.options(joinedload(self.model.recurrence))
+
+        result = await self.db.execute(stmt)
+        return result.unique().scalar()
 
     async def create(self, obj_in: dict) -> ModelType:
         db_obj = self.model(**obj_in)

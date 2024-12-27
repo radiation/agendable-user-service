@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 
 import pytest
-from app.models import Meeting
+from app.models import Meeting, MeetingAttendee, MeetingRecurrence
 from app.repositories.meeting_repository import MeetingRepository
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 
 
 @pytest.mark.asyncio
@@ -38,6 +40,31 @@ async def test_get_meeting_by_id(test_client):
     retrieved = await repo.get_by_id(meeting.id)
     assert retrieved.title == "Test Meeting"
     assert retrieved.duration == 60
+
+
+@pytest.mark.asyncio
+async def test_get_meeting_by_field(test_client):
+    client, db_session = test_client
+    repo = MeetingRepository(db_session)
+
+    # Create and commit a sample meeting
+    meeting = Meeting(
+        title="Test Meeting",
+        start_date=datetime.now(),
+        end_date=datetime.now() + timedelta(hours=1),
+        duration=60,
+    )
+    db_session.add(meeting)
+    await db_session.commit()
+
+    # Use the repository's get_by_field method
+    retrieved = await repo.get_by_field("title", "Test Meeting")
+
+    # Assertions
+    assert retrieved is not None
+    assert retrieved.title == "Test Meeting"
+    assert retrieved.duration == 60
+    assert retrieved.id == meeting.id
 
 
 @pytest.mark.asyncio
@@ -77,3 +104,46 @@ async def test_delete_meeting(test_client):
     await repo.delete(meeting.id)
     deleted = await repo.get_by_id(meeting.id)
     assert deleted is None
+
+
+@pytest.mark.asyncio
+async def test_relationships(engine, tables):
+    async_session_factory = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session_factory() as session:
+        # Add a recurrence
+        recurrence = MeetingRecurrence(
+            title="Weekly Recurrence", rrule="FREQ=WEEKLY;INTERVAL=1"
+        )
+        session.add(recurrence)
+        await session.commit()
+
+        # Create a meeting
+        meeting = Meeting(
+            title="Test Meeting",
+            start_date=datetime.now(),
+            end_date=datetime.now() + timedelta(hours=1),
+            duration=60,
+            recurrence_id=recurrence.id,
+        )
+        session.add(meeting)
+        await session.commit()
+
+        # Add attendees
+        attendees = [
+            MeetingAttendee(meeting_id=meeting.id, user_id=1),
+            MeetingAttendee(meeting_id=meeting.id, user_id=2),
+        ]
+        session.add_all(attendees)
+        await session.commit()
+
+        # Query the meeting with relationships
+        repo = MeetingRepository(session)
+        result = await repo.get_by_id(meeting.id)
+
+        # Assertions
+        assert result is not None
+        assert result.recurrence.title == "Weekly Recurrence"
+        assert len(result.attendees) == 2
+        assert {attendee.user_id for attendee in result.attendees} == {1, 2}
