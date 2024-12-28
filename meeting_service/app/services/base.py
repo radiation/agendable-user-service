@@ -13,13 +13,18 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, repository: BaseRepository[ModelType]):
         self.repository = repository
 
+    def _get_model_name(self) -> str:
+        return self.repository.model.__name__
+
     async def create(self, create_data: CreateSchemaType) -> ModelType:
         return await self.repository.create(create_data.model_dump())
 
     async def get_by_id(self, id: int) -> ModelType:
         entity = await self.repository.get_by_id(id)
         if not entity:
-            raise NotFoundError(detail=f"Entity with ID {id} not found")
+            raise NotFoundError(
+                detail=f"{self._get_model_name()} with ID {id} not found"
+            )
         return entity
 
     async def get_by_field(self, field_name: str, value: any) -> list[ModelType]:
@@ -31,7 +36,9 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def update(self, id: int, update_data: UpdateSchemaType) -> ModelType:
         entity = await self.repository.get_by_id(id)
         if not entity:
-            raise NotFoundError(detail=f"Entity with ID {id} not found")
+            raise NotFoundError(
+                detail=f"{self._get_model_name()} with ID {id} not found"
+            )
         return await self.repository.update(
             id, update_data.model_dump(exclude_unset=True)
         )
@@ -39,5 +46,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def delete(self, id: int) -> bool:
         entity = await self.repository.get_by_id(id)
         if not entity:
-            raise NotFoundError(detail=f"Entity with ID {id} not found")
+            raise NotFoundError(
+                detail=f"{self._get_model_name()} with ID {id} not found"
+            )
         return await self.repository.delete(id)

@@ -18,7 +18,10 @@ async def create_meeting(
     service: MeetingService = Depends(get_meeting_service),
 ) -> meeting_schemas.MeetingRetrieve:
     try:
-        return await service.create_meeting(meeting)
+        if meeting.recurrence_id:
+            return await service.create_meeting_with_recurrence(meeting)
+        else:
+            return await service.create(meeting)
     except Exception as e:
         raise ValidationError(detail=str(e))
 
@@ -30,7 +33,7 @@ async def get_meetings(
     limit: int = 10,
     service: MeetingService = Depends(get_meeting_service),
 ) -> list[meeting_schemas.MeetingRetrieve]:
-    return await service.list_meetings(skip, limit)
+    return await service.get_all(skip, limit)
 
 
 # Get a meeting by ID
@@ -40,7 +43,7 @@ async def get_meeting(
     service: MeetingService = Depends(get_meeting_service),
     attendee: dict = Depends(get_attendee),
 ) -> meeting_schemas.MeetingRetrieve:
-    meeting = await service.get_meeting(meeting_id)
+    meeting = await service.get_by_id(meeting_id)
     if not meeting:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 
@@ -58,7 +61,7 @@ async def update_meeting(
     meeting: meeting_schemas.MeetingUpdate,
     service: MeetingService = Depends(get_meeting_service),
 ) -> meeting_schemas.MeetingRetrieve:
-    updated_meeting = await service.update_meeting(meeting_id, meeting)
+    updated_meeting = await service.update(meeting_id, meeting)
     if updated_meeting is None:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
     return updated_meeting
@@ -69,7 +72,7 @@ async def update_meeting(
 async def delete_meeting(
     meeting_id: int, service: MeetingService = Depends(get_meeting_service)
 ):
-    success = await service.delete_meeting(meeting_id)
+    success = await service.delete(meeting_id)
     if not success:
         raise NotFoundError(detail=f"Meeting with ID {meeting_id} not found")
 

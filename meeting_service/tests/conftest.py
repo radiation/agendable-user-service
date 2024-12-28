@@ -72,7 +72,7 @@ async def test_client(db_session):
 @pytest.fixture
 async def meeting_service(db_session):
     repo = MeetingRepository(db_session)
-    service = MeetingService(meeting_repo=repo, attendee_repo=None)
+    service = MeetingService(repository=repo, attendee_repo=None)
     return service
 
 

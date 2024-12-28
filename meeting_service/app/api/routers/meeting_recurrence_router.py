@@ -13,7 +13,7 @@ async def create_meeting_recurrence(
     meeting_recurrence: meeting_recurrence_schemas.MeetingRecurrenceCreate,
     service: MeetingRecurrenceService = Depends(get_meeting_recurrence_service),
 ) -> meeting_recurrence_schemas.MeetingRecurrenceRetrieve:
-    return await service.create_recurrence(meeting_recurrence)
+    return await service.create(meeting_recurrence)
 
 
 # List all meeting recurrences
@@ -25,7 +25,7 @@ async def get_meeting_recurrences(
     limit: int = 10,
     service: MeetingRecurrenceService = Depends(get_meeting_recurrence_service),
 ) -> list[meeting_recurrence_schemas.MeetingRecurrenceRetrieve]:
-    recurrences = await service.recurrence_repo.get_all(skip=skip, limit=limit)
+    recurrences = await service.get_all(skip=skip, limit=limit)
     return [
         meeting_recurrence_schemas.MeetingRecurrenceRetrieve.model_validate(recurrence)
         for recurrence in recurrences
@@ -41,7 +41,7 @@ async def get_meeting_recurrence(
     recurrence_id: int,
     service: MeetingRecurrenceService = Depends(get_meeting_recurrence_service),
 ) -> meeting_recurrence_schemas.MeetingRecurrenceRetrieve:
-    return await service.get_recurrence(recurrence_id)
+    return await service.get_by_id(recurrence_id)
 
 
 # Update an existing meeting recurrence
@@ -54,7 +54,7 @@ async def update_meeting_recurrence(
     meeting_recurrence: meeting_recurrence_schemas.MeetingRecurrenceUpdate,
     service: MeetingRecurrenceService = Depends(get_meeting_recurrence_service),
 ) -> meeting_recurrence_schemas.MeetingRecurrenceRetrieve:
-    return await service.update_recurrence(recurrence_id, meeting_recurrence)
+    return await service.update(recurrence_id, meeting_recurrence)
 
 
 # Delete a meeting recurrence
@@ -63,7 +63,7 @@ async def delete_meeting_recurrence(
     recurrence_id: int,
     service: MeetingRecurrenceService = Depends(get_meeting_recurrence_service),
 ):
-    await service.delete_recurrence(recurrence_id)
+    await service.delete(recurrence_id)
     return {"detail": "Meeting recurrence deleted successfully"}
 
 
