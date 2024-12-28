@@ -10,21 +10,21 @@ router = APIRouter()
 async def create_task(
     task: task_schemas.TaskCreate, service: TaskService = Depends(get_task_service)
 ) -> task_schemas.TaskRetrieve:
-    return await service.create_task(task)
+    return await service.create(task)
 
 
 @router.get("/", response_model=list[task_schemas.TaskRetrieve])
 async def get_tasks(
     service: TaskService = Depends(get_task_service),
 ) -> list[task_schemas.TaskRetrieve]:
-    return await service.get_tasks_by_user(user_id=None)
+    return await service.get_by_field(field_name="assignee_id", value=None)
 
 
 @router.get("/{task_id}", response_model=task_schemas.TaskRetrieve)
 async def get_task(
     task_id: int, service: TaskService = Depends(get_task_service)
 ) -> task_schemas.TaskRetrieve:
-    return await service.get_task(task_id)
+    return await service.get_by_id(task_id)
 
 
 @router.put("/{task_id}", response_model=task_schemas.TaskRetrieve)
@@ -33,12 +33,12 @@ async def update_task(
     task: task_schemas.TaskUpdate,
     service: TaskService = Depends(get_task_service),
 ) -> task_schemas.TaskRetrieve:
-    return await service.update_task(task_id, task)
+    return await service.update(task_id, task)
 
 
 @router.delete("/{task_id}", status_code=204)
 async def delete_task(task_id: int, service: TaskService = Depends(get_task_service)):
-    await service.delete_task(task_id)
+    await service.delete(task_id)
 
 
 @router.get("/user/{user_id}", response_model=list[task_schemas.TaskRetrieve])

@@ -1,5 +1,6 @@
 import sqlalchemy.sql.functions as func
 from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String
+from sqlalchemy.orm import relationship
 
 from . import Base
 
@@ -20,3 +21,8 @@ class Task(Base):
     completed = Column(Boolean, default=False)
     completed_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    meeting_tasks = relationship(
+        "MeetingTask", back_populates="task", cascade="all, delete-orphan"
+    )

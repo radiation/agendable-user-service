@@ -4,9 +4,9 @@ from app.schemas.meeting_task_schemas import MeetingTaskCreate, MeetingTaskUpdat
 
 
 @pytest.mark.asyncio
-async def test_create_meeting_task_service(meeting_task_service, db_session):
+async def test_create_meeting_task_service(meeting_task_service):
     new_task_data = MeetingTaskCreate(meeting_id=1, task_id=1)
-    created_task = await meeting_task_service.create_meeting_task(new_task_data)
+    created_task = await meeting_task_service.create(new_task_data)
 
     assert created_task.meeting_id == 1
     assert created_task.task_id == 1
@@ -18,7 +18,7 @@ async def test_get_meeting_task_service(meeting_task_service, db_session):
     db_session.add(meeting_task)
     await db_session.commit()
 
-    retrieved_task = await meeting_task_service.get_meeting_task(meeting_task.id)
+    retrieved_task = await meeting_task_service.get_by_id(meeting_task.id)
     assert retrieved_task.id == meeting_task.id
     assert retrieved_task.meeting_id == 1
 
@@ -30,9 +30,7 @@ async def test_update_meeting_task_service(meeting_task_service, db_session):
     await db_session.commit()
 
     update_data = MeetingTaskUpdate(meeting_id=2, task_id=3)
-    updated_task = await meeting_task_service.update_meeting_task(
-        meeting_task.id, update_data
-    )
+    updated_task = await meeting_task_service.update(meeting_task.id, update_data)
     assert updated_task.meeting_id == 2
 
 
@@ -42,10 +40,10 @@ async def test_delete_meeting_task_service(meeting_task_service, db_session):
     db_session.add(meeting_task)
     await db_session.commit()
 
-    await meeting_task_service.delete_meeting_task(meeting_task.id)
+    await meeting_task_service.delete(meeting_task.id)
 
     with pytest.raises(Exception):
-        await meeting_task_service.get_meeting_task(meeting_task.id)
+        await meeting_task_service.get_by_id(meeting_task.id)
 
 
 @pytest.mark.asyncio

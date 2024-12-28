@@ -39,7 +39,7 @@ async def test_get_meeting_by_id(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_meeting_by_field(db_session):
+async def test_get_meeting_by_user(db_session):
     repo = MeetingRepository(db_session)
 
     # Create and commit a sample meeting
@@ -53,13 +53,14 @@ async def test_get_meeting_by_field(db_session):
     await db_session.commit()
 
     # Use the repository's get_by_field method
-    retrieved = await repo.get_by_field("title", "Test Meeting")
+    retrieved_meetings: list[Meeting] = await repo.get_by_field("title", "Test Meeting")
 
     # Assertions
-    assert retrieved is not None
-    assert retrieved.title == "Test Meeting"
-    assert retrieved.duration == 60
-    assert retrieved.id == meeting.id
+    assert len(retrieved_meetings) == 1
+    assert retrieved_meetings[0] is not None
+    assert retrieved_meetings[0].title == "Test Meeting"
+    assert retrieved_meetings[0].duration == 60
+    assert retrieved_meetings[0].id == meeting.id
 
 
 @pytest.mark.asyncio

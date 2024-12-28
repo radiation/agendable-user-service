@@ -40,6 +40,9 @@ class Meeting(Base):
         "MeetingRecurrence", back_populates="meetings", lazy="select"
     )
     attendees = relationship("MeetingAttendee", back_populates="meeting", lazy="joined")
+    tasks = relationship(
+        "MeetingTask", back_populates="meeting", cascade="all, delete-orphan"
+    )
 
 
 @event.listens_for(Meeting, "before_insert")

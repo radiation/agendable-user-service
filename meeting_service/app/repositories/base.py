@@ -12,6 +12,13 @@ class BaseRepository(Generic[ModelType]):
         self.model = model
         self.db = db
 
+    async def create(self, obj_in: dict) -> ModelType:
+        db_obj = self.model(**obj_in)
+        self.db.add(db_obj)
+        await self.db.commit()
+        await self.db.refresh(db_obj)
+        return db_obj
+
     async def get_by_id(self, id: int) -> ModelType:
         stmt = select(self.model).filter(self.model.id == id)
 
@@ -36,7 +43,7 @@ class BaseRepository(Generic[ModelType]):
         result = await self.db.execute(stmt)
         return result.unique().scalars().all()
 
-    async def get_by_field(self, field_name: str, value: Any) -> ModelType:
+    async def get_by_field(self, field_name: str, value: Any) -> list[ModelType]:
         stmt = select(self.model).filter(getattr(self.model, field_name) == value)
 
         # Add eager loading for common relationships if applicable
@@ -46,14 +53,7 @@ class BaseRepository(Generic[ModelType]):
             stmt = stmt.options(joinedload(self.model.recurrence))
 
         result = await self.db.execute(stmt)
-        return result.unique().scalar()
-
-    async def create(self, obj_in: dict) -> ModelType:
-        db_obj = self.model(**obj_in)
-        self.db.add(db_obj)
-        await self.db.commit()
-        await self.db.refresh(db_obj)
-        return db_obj
+        return result.unique().scalars().all()
 
     async def update(self, id: int, update_data: dict) -> ModelType:
         obj = await self.get_by_id(id)
