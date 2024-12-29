@@ -10,7 +10,6 @@ router = APIRouter()
 async def create_user(
     user: UserCreate, service: UserService = Depends(get_user_service)
 ) -> UserRetrieve:
-    print(user)
     return service.create_user(user)
 
 
@@ -18,7 +17,6 @@ async def create_user(
 async def get_user(
     email: str, service: UserService = Depends(get_user_service)
 ) -> UserRetrieve:
-    print(email)
     return await service.get_user_by_email(email)
 
 
