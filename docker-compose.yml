@@ -21,9 +21,9 @@ services:
       timeout: 15s
       retries: 5
 
-  user_service:
+  user-service:
     build:
-      context: ./user_service
+      context: ./user-service
     command: uvicorn main:app --host 0.0.0.0 --port ${USER_SERVICE_PORT} --reload
     environment:
       - DATABASE_URL=${USER_DB_URL}
@@ -31,7 +31,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./user_service/app:/app
+      - ./user-service/app:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,9 +39,9 @@ services:
       - web
       - postgres
 
-  meeting_service:
+  meeting-service:
     build:
-      context: ./meeting_service
+      context: ./meeting-service
     command: uvicorn main:app --host 0.0.0.0 --port ${MEETING_SERVICE_PORT} --reload
     environment:
       - DATABASE_URL=${MEETING_DB_URL}
@@ -49,7 +49,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./meeting_service/app:/app
+      - ./meeting-service/app:/app
     depends_on:
       postgres:
         condition: service_healthy

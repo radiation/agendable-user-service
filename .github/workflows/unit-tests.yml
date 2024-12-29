@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: meeting_service
+        working-directory: meeting-service
     env:
       PYTHONPATH: ${{ github.workspace }}/meeting_service
       SECRET_KEY: ${{ secrets.SECRET_KEY }}

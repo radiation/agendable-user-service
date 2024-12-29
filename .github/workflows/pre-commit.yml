@@ -19,7 +19,7 @@ jobs:
           python-version: 3.12
       - name: Install dependencies from all services
         run: |
-          pip install -r meeting_service/requirements.txt
-          pip install -r user_service/requirements.txt
+          pip install -r meeting-service/requirements.txt
+          pip install -r user-service/requirements.txt
       - name: Run pre-commit
         run: pre-commit run --all-files

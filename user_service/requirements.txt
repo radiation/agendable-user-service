@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-databases[postgresql]
-asyncpg
-alembic
-psycopg2-binary
-fastapi-users[sqlalchemy]
-bcrypt
