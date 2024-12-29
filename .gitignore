@@ -163,3 +163,7 @@ cython_debug/
 
 # PyTest
 **/test.db
+
+
+# NPM
+**/node_modules/*

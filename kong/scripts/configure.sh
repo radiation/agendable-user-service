@@ -123,3 +123,53 @@ if [ "$PLUGIN_EXISTS" != "request-transformer" ]; then
 else
     echo "request-transformer Plugin already enabled for meeting-service."
 fi
+
+###############
+# CORS Plugin #
+###############
+
+# Enable CORS Plugin for Meeting Service
+PLUGIN_EXISTS=$(/usr/bin/curl -s ${KONG_URL}/services/meeting_service/plugins | /usr/bin/jq -r '.data[] | select(.name=="cors") | .name')
+if [ "$PLUGIN_EXISTS" != "cors" ]; then
+    echo "Enabling CORS Plugin for meeting_service..."
+    /usr/bin/curl -i -X POST \
+        --url ${KONG_URL}/services/meeting_service/plugins/ \
+        --data "name=cors" \
+        --data "config.origins=*" \
+        --data "config.methods[]=GET" \
+        --data "config.methods[]=HEAD" \
+        --data "config.methods[]=PUT" \
+        --data "config.methods[]=PATCH" \
+        --data "config.methods[]=POST" \
+        --data "config.methods[]=DELETE" \
+        --data "config.methods[]=OPTIONS" \
+        --data "config.headers[]=Content-Type" \
+        --data "config.headers[]=Authorization" \
+        --data "config.exposed_headers[]=Authorization" \
+        --data "config.credentials=true"
+else
+    echo "CORS Plugin already enabled for meeting_service."
+fi
+
+# Enable CORS Plugin for User Service
+PLUGIN_EXISTS=$(/usr/bin/curl -s ${KONG_URL}/services/user_service/plugins | /usr/bin/jq -r '.data[] | select(.name=="cors") | .name')
+if [ "$PLUGIN_EXISTS" != "cors" ]; then
+    echo "Enabling CORS Plugin for user_service..."
+    /usr/bin/curl -i -X POST \
+        --url ${KONG_URL}/services/user_service/plugins/ \
+        --data "name=cors" \
+        --data "config.origins=*" \
+        --data "config.methods[]=GET" \
+        --data "config.methods[]=HEAD" \
+        --data "config.methods[]=PUT" \
+        --data "config.methods[]=PATCH" \
+        --data "config.methods[]=POST" \
+        --data "config.methods[]=DELETE" \
+        --data "config.methods[]=OPTIONS" \
+        --data "config.headers[]=Content-Type" \
+        --data "config.headers[]=Authorization" \
+        --data "config.exposed_headers[]=Authorization" \
+        --data "config.credentials=true"
+else
+    echo "CORS Plugin already enabled for user_service."
+fi
