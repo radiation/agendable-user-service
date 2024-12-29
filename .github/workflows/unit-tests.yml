@@ -12,13 +12,13 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  meeting_service_tests:
+  meeting-service-tests:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: meeting-service
     env:
-      PYTHONPATH: ${{ github.workspace }}/meeting_service
+      PYTHONPATH: ${{ github.workspace }}/meeting-service
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
     steps:
     - uses: actions/checkout@v2
