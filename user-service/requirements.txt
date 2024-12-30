@@ -4,6 +4,9 @@ sqlalchemy
 alembic
 psycopg2-binary
 pydantic
+pydantic[email]
+pydantic-settings
+aiosqlite
 python-jose
 passlib[bcrypt]
 httpx
