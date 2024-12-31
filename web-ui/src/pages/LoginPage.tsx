@@ -7,16 +7,18 @@ const LoginPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        alert("Form submitted"); // This ensures the event triggers.
-        e.preventDefault();
-        console.log("Attempting login with:", email, password);
+        e.preventDefault(); // Prevent page reload
+
         try {
+            console.log("Attempting login with:", email, password);
             const token = await login(email, password);
+
+            // Save the token to localStorage or any secure storage
             localStorage.setItem('authToken', token);
             setError(null);
             alert('Login successful!');
-        } catch (err) {
-            console.log("Failed to login with:", email, password);
+        } catch (err: any) {
+            console.error("Login error:", err);
             setError('Invalid email or password');
         }
     };

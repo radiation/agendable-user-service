@@ -129,11 +129,11 @@ fi
 ###############
 
 # Enable CORS Plugin for Meeting Service
-PLUGIN_EXISTS=$(/usr/bin/curl -s ${KONG_URL}/services/meeting_service/plugins | /usr/bin/jq -r '.data[] | select(.name=="cors") | .name')
+PLUGIN_EXISTS=$(/usr/bin/curl -s ${KONG_URL}/services/meeting-service/plugins | /usr/bin/jq -r '.data[] | select(.name=="cors") | .name')
 if [ "$PLUGIN_EXISTS" != "cors" ]; then
-    echo "Enabling CORS Plugin for meeting_service..."
+    echo "Enabling CORS Plugin for meeting-service..."
     /usr/bin/curl -i -X POST \
-        --url ${KONG_URL}/services/meeting_service/plugins/ \
+        --url ${KONG_URL}/services/meeting-service/plugins/ \
         --data "name=cors" \
         --data "config.origins=*" \
         --data "config.methods[]=GET" \
@@ -148,15 +148,15 @@ if [ "$PLUGIN_EXISTS" != "cors" ]; then
         --data "config.exposed_headers[]=Authorization" \
         --data "config.credentials=true"
 else
-    echo "CORS Plugin already enabled for meeting_service."
+    echo "CORS Plugin already enabled for meeting-service."
 fi
 
 # Enable CORS Plugin for User Service
-PLUGIN_EXISTS=$(/usr/bin/curl -s ${KONG_URL}/services/user_service/plugins | /usr/bin/jq -r '.data[] | select(.name=="cors") | .name')
+PLUGIN_EXISTS=$(/usr/bin/curl -s ${KONG_URL}/services/user-service/plugins | /usr/bin/jq -r '.data[] | select(.name=="cors") | .name')
 if [ "$PLUGIN_EXISTS" != "cors" ]; then
-    echo "Enabling CORS Plugin for user_service..."
+    echo "Enabling CORS Plugin for user-service..."
     /usr/bin/curl -i -X POST \
-        --url ${KONG_URL}/services/user_service/plugins/ \
+        --url ${KONG_URL}/services/user-service/plugins/ \
         --data "name=cors" \
         --data "config.origins=*" \
         --data "config.methods[]=GET" \
@@ -171,5 +171,5 @@ if [ "$PLUGIN_EXISTS" != "cors" ]; then
         --data "config.exposed_headers[]=Authorization" \
         --data "config.credentials=true"
 else
-    echo "CORS Plugin already enabled for user_service."
+    echo "CORS Plugin already enabled for user-service."
 fi
