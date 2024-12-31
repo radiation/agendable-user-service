@@ -1,11 +1,12 @@
 from app.db.models import User
+from app.db.repositories.base import BaseRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 
-class UserRepository:
+class UserRepository(BaseRepository[User]):
     def __init__(self, db: AsyncSession):
-        self.db = db
+        super().__init__(model=User, db=db)
 
     async def create_user(self, email: str, hashed_password: str) -> User:
         user = User(email=email, hashed_password=hashed_password)
