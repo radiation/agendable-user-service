@@ -1,6 +1,6 @@
 import pytest
 from app.db.models import Base
-from app.db.repositories.user import UserRepository
+from app.db.repositories.user_repo import UserRepository
 from app.db.session import get_db
 from app.main import app
 from httpx import ASGITransport, AsyncClient

@@ -1,7 +1,7 @@
 from typing import Generic, TypeVar
 
 from app.core.security import get_password_hash
-from app.db.repositories.base import BaseRepository
+from app.db.repositories.base_repo import BaseRepository
 from app.errors import NotFoundError
 from pydantic import BaseModel
 
