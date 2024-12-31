@@ -43,6 +43,7 @@ async def login_user(
     login_request: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    print("login_request", login_request)
     repo = UserRepository(db)
     user = await repo.get_user_by_email(login_request.email)
     if not user or not verify_password(login_request.password, user.hashed_password):
