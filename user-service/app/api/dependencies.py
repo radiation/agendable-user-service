@@ -1,6 +1,6 @@
 from app.core.security import oauth2_scheme
 from app.core.settings import settings
-from app.db.repositories.user import UserRepository
+from app.db.repositories.user_repo import UserRepository
 from app.db.session import get_db
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService

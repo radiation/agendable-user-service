@@ -1,6 +1,6 @@
 import pytest
 from app.core.security import verify_password
-from app.db.repositories.user import UserRepository
+from app.db.repositories.user_repo import UserRepository
 
 
 @pytest.mark.asyncio
