@@ -1,19 +1,9 @@
-from app.core.security import get_password_hash
-from app.db.repository import UserRepository
-from app.schemas.user import UserCreate
+from app.db.models import User
+from app.db.repositories.user import UserRepository
+from app.schemas.user import UserCreate, UserUpdate
+from app.services.base import BaseService
 
 
-class UserService:
-    def __init__(self, repo: UserRepository):
-        self.repo = repo
-
-    async def create_user(self, user_create: UserCreate):
-        user_data = user_create.model_dump()
-        user_data["password"] = get_password_hash(user_create.password)
-        return await self.repo.create_user(**user_data)
-
-    async def get_user_by_email(self, email: str):
-        return await self.repo.get_user_by_email(email)
-
-    async def get_users(self):
-        return await self.repo.get_users()
+class UserService(BaseService[User, UserCreate, UserUpdate]):
+    def __init__(self, repository: UserRepository):
+        super().__init__(repository)
