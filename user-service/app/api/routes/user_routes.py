@@ -1,5 +1,5 @@
 from app.api.dependencies import get_current_user, get_user_service
-from app.errors import NotFoundError
+from app.exceptions import NotFoundError
 from app.schemas.user import UserCreate, UserRetrieve, UserUpdate
 from app.services.user_service import UserService
 from fastapi import APIRouter, Depends, status
