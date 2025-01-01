@@ -101,6 +101,7 @@ fi
 
 # Check and associate JWT with the Consumer
 JWT_EXISTS=$(/usr/bin/curl -s ${KONG_URL}/consumers/user-service-consumer/jwt | /usr/bin/jq -r '.data[] | select(.key=="user-service") | .key')
+echo "SECRET_KEY: ${SECRET_KEY}"
 if [ "$JWT_EXISTS" != "user-service" ]; then
     echo "Associating JWT with consumer user-service-consumer..."
     /usr/bin/curl -i -X POST \

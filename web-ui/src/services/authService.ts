@@ -8,3 +8,8 @@ export const login = async (email: string, password: string): Promise<string> =>
 
     return response.data.access_token;
 };
+
+export const getCurrentUser = async (): Promise<{ id: number; email: string }> => {
+    const response = await api.get('/me');
+    return response.data;
+};
