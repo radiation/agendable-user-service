@@ -10,6 +10,7 @@ load_dotenv()
 class Settings(BaseSettings):
     # Secret key for token generation
     SECRET_KEY: str = os.getenv("SECRET_KEY", "default_secret_key")
+    print("Settings SECRET_KEY: ", SECRET_KEY)
 
     # DB Connection
     DB_PORT: int = int(os.getenv("POSTGRES_PORT", 5432))
