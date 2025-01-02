@@ -1,9 +1,14 @@
-from app.core.security import create_access_token, get_password_hash, verify_password
+from app.core.security import (
+    create_access_token,
+    decode_access_token,
+    get_password_hash,
+    verify_password,
+)
 from app.db.repositories.user_repo import UserRepository
 from app.db.session import get_db
 from app.schemas.auth import Token
-from app.schemas.user import UserCreate
-from fastapi import APIRouter, Depends, HTTPException, status
+from app.schemas.user import UserCreate, UserRetrieve
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -47,3 +52,22 @@ async def login_user(
         )
     token = create_access_token(data={"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/protected-route", response_model=UserRetrieve)
+async def protected_route(authorization: str = Header(...)):
+    print(f"Authorization header received: {authorization}")
+    print(authorization.startswith("Bearer "))
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token format"
+        )
+
+    token = authorization.split(" ")[1]
+    try:
+        payload = decode_access_token(token)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+    # Simulating the logged-in user from the token payload
+    return {"id": 1, "email": payload["sub"]}
