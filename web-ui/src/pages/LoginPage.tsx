@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
 
 const LoginPage: React.FC = () => {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -16,7 +18,7 @@ const LoginPage: React.FC = () => {
             // Save the token to localStorage or any secure storage
             localStorage.setItem('authToken', token);
             setError(null);
-            alert('Login successful!');
+            navigate('/home');
         } catch (err: any) {
             console.error("Login error:", err);
             setError('Invalid email or password');

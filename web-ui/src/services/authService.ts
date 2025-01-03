@@ -10,6 +10,6 @@ export const login = async (email: string, password: string): Promise<string> =>
 };
 
 export const getCurrentUser = async (): Promise<{ id: number; email: string }> => {
-    const response = await api.get('/me');
+    const response = await api.get('/users/me');
     return response.data;
 };
