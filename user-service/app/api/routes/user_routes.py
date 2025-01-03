@@ -47,9 +47,11 @@ async def get_user(
     return await service.get_by_id(user_id)
 
 
-@router.get("/", response_model=UserRetrieve)
-async def get_users(service: UserService = Depends(get_user_service)) -> UserRetrieve:
-    return service.get_all()
+@router.get("/", response_model=list[UserRetrieve])
+async def get_users(
+    service: UserService = Depends(get_user_service),
+) -> list[UserRetrieve]:
+    return await service.get_all()
 
 
 @router.put("/{user_id}", response_model=UserRetrieve)
@@ -58,7 +60,6 @@ async def update_user(
     user_update: UserUpdate,
     service: UserService = Depends(get_user_service),
 ) -> UserRetrieve:
-    print(user_update)
     updated_user = await service.update(user_id, user_update)
     if not updated_user:
         raise NotFoundError(detail=f"User with ID {user_id} not found")
