@@ -7,6 +7,7 @@ app = FastAPI(title="User Service", version="1.0.0")
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
 app.include_router(user_routes.router, prefix="/users", tags=["users"])
 
+
 @app.get("/")
 async def root():
     return {"message": "User Service is running"}
