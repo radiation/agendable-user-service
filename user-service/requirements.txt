@@ -14,3 +14,4 @@ httpx
 pytest-asyncio
 async-asgi-testclient
 asyncpg
+loguru
