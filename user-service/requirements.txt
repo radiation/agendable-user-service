@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 alembic
+greenlet
 psycopg2-binary
 pydantic
 pydantic[email]
@@ -10,6 +11,6 @@ aiosqlite
 python-jose
 passlib[bcrypt]
 httpx
-pytest-asyncio==0.23.8
-async-asgi-testclient==1.4.11
+pytest-asyncio
+async-asgi-testclient
 asyncpg
