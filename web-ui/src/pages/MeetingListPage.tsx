@@ -1,61 +1,54 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import { Meeting } from '../types/meeting';
+import { getAllMeetings } from '../services/meetingService';
+import MeetingList from '../components/MeetingList';
+import { Container, Typography, CircularProgress, Alert } from '@mui/material';
 
-interface Meeting {
-    id: string;
-    title: string;
-    description: string;
-    start_date: string;
-    end_date: string;
-}
+const MeetingsPage: React.FC = () => {
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const MeetingListPage: React.FC = () => {
-    const [meetings, setMeetings] = useState<Meeting[]>([]);
-    const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      try {
+        const data = await getAllMeetings();
+        setMeetings(data);
+      } catch (err) {
+        console.error('Failed to load meetings:', err);
+        setError('Could not load meetings.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    useEffect(() => {
-        const fetchMeetings = async () => {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    throw new Error('No authentication token found');
-                }
+    fetchMeetings();
+  }, []);
 
-                const response = await api.get('/meetings', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                setMeetings(response.data);
-                setError(null);
-            } catch (err: any) {
-                setError(err.message || 'Failed to fetch meetings');
-            }
-        };
-
-        fetchMeetings();
-    }, []);
-
+  if (loading) {
     return (
-        <div>
-            <h1>Meetings</h1>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <ul>
-                {meetings.map((meeting) => (
-                    <li key={meeting.id}>
-                        <h2>{meeting.title}</h2>
-                        <p>{meeting.description}</p>
-                        <p>
-                            Start: {new Date(meeting.start_date).toLocaleString()}
-                        </p>
-                        <p>
-                            End: {new Date(meeting.end_date).toLocaleString()}
-                        </p>
-                    </li>
-                ))}
-            </ul>
-        </div>
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <CircularProgress />
+      </Container>
     );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        All Meetings
+      </Typography>
+      <MeetingList meetings={meetings} />
+    </Container>
+  );
 };
 
-export default MeetingListPage;
+export default MeetingsPage;

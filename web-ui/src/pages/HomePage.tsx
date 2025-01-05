@@ -1,75 +1,60 @@
 import React, { useEffect, useState } from 'react';
+import { Meeting } from '../types/meeting';
 import { getCurrentUser } from '../services/authService';
 import { getUserMeetings } from '../services/meetingService';
-
-interface Meeting {
-    id: number;
-    title: string;
-    start_date: string;
-    end_date: string;
-    description: string;
-}
+import MeetingList from '../components/MeetingList';
+import { Container, Typography, CircularProgress, Alert } from '@mui/material';
 
 const HomePage: React.FC = () => {
-    const [meetings, setMeetings] = useState<Meeting[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                // Fetch the current user
-                const user = await getCurrentUser();
-                console.log('Current user:', user);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch the current user
+        const user = await getCurrentUser();
 
-                // Fetch the user's meetings
-                const userMeetings = await getUserMeetings(user.id);
-                console.log('User meetings:', userMeetings);
+        // Fetch the user's meetings
+        const userMeetings = await getUserMeetings(user.id);
 
-                setMeetings(userMeetings);
-            } catch (err: any) {
-                console.error('Error fetching data:', err);
-                setError('Failed to load data.');
-            } finally {
-                setLoading(false);
-            }
-        };
+        setMeetings(userMeetings);
+      } catch (err: any) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load data.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        fetchData();
-    }, []);
+    fetchData();
+  }, []);
 
-    if (loading) {
-        return <p>Loading...</p>;
-    }
-
-    if (error) {
-        return <p style={{ color: 'red' }}>{error}</p>;
-    }
-
+  if (loading) {
     return (
-        <div>
-            <h1>Upcoming Meetings</h1>
-            {meetings.length === 0 ? (
-                <p>No upcoming meetings.</p>
-            ) : (
-                <ul>
-                    {meetings.map((meeting) => (
-                        <li key={meeting.id}>
-                            <h2>{meeting.title}</h2>
-                            <p>{meeting.description}</p>
-                            <p>
-                                Start: {new Date(meeting.start_date).toLocaleString()}
-                            </p>
-                            <p>
-                                End: {new Date(meeting.end_date).toLocaleString()}
-                            </p>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <CircularProgress />
+      </Container>
     );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Upcoming Meetings
+      </Typography>
+      <MeetingList meetings={meetings} />
+    </Container>
+  );
 };
 
 export default HomePage;

@@ -9,7 +9,7 @@ interface MeetingPayload {
 
 export const createMeeting = async (meeting: MeetingPayload): Promise<any> => {
     const response = await api.post('/meetings/', meeting);
-    return response.data; // Return the created meeting
+    return response.data;
 };
 
 export const getMeetingDetails = async (meetingId: number): Promise<any> => {
@@ -21,3 +21,8 @@ export const getUserMeetings = async (userId: number): Promise<any[]> => {
     const response = await api.get(`/meetings/by_user/${userId}`);
     return response.data;
 };
+
+export const getAllMeetings = async (): Promise<any[]> => {
+    const response = await api.get('/meetings/');
+    return response.data;
+  };
