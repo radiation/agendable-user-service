@@ -4,8 +4,9 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import MeetingsPage from './pages/MeetingsPage';
 import CreateMeetingPage from './pages/CreateMeetingPage';
+import MeetingDetailsPage from './pages/MeetingDetailsPage';
 import TasksPage from './pages/TasksPage';
-import NavBar from './components/NavBar';
+import NavBar from './components/Navbar';
 
 const App: React.FC = () => (
     <Router>
@@ -16,6 +17,7 @@ const App: React.FC = () => (
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/meetings" element={<MeetingsPage />} />
                 <Route path="/create-meeting" element={<CreateMeetingPage />} />
+                <Route path="/meetings/:meetingId" element={<MeetingDetailsPage />} />
                 <Route path="/tasks" element={<TasksPage />} />
             </Routes>
         </div>

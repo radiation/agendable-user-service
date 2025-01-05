@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createMeeting } from '../services/meetingService';
 
 const CreateMeetingPage: React.FC = () => {
+    const navigate = useNavigate();
     const [title, setTitle] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -12,12 +14,15 @@ const CreateMeetingPage: React.FC = () => {
         e.preventDefault();
         try {
             const newMeeting = { title, start_date: startDate, end_date: endDate, description };
-            await createMeeting(newMeeting); // Call the service to create a meeting
-            setMessage('Meeting created successfully!');
+            const createdMeeting = await createMeeting(newMeeting); // Expect the service to return the created meeting
+            setMessage(null);
             setTitle('');
             setStartDate('');
             setEndDate('');
             setDescription('');
+
+            // Redirect to the meeting details page
+            navigate(`/meetings/${createdMeeting.id}`);
         } catch (err: any) {
             console.error('Error creating meeting:', err);
             setMessage('Failed to create meeting. Please try again.');
