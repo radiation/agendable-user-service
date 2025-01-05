@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
+import { login as loginService } from '../services/authService';
 
 const LoginPage: React.FC = () => {
     const navigate = useNavigate();
+    const { login } = useAuth(); // Use login function from AuthContext
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -13,11 +15,11 @@ const LoginPage: React.FC = () => {
 
         try {
             console.log("Attempting login with:", email, password);
-            const token = await login(email, password);
-
-            // Save the token to localStorage or any secure storage
-            localStorage.setItem('authToken', token);
+            const token = await loginService(email, password); // Call auth service
+            login(token); // Update AuthContext
             setError(null);
+
+            // Redirect to home page
             navigate('/home');
         } catch (err: any) {
             console.error("Login error:", err);

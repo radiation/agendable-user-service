@@ -18,13 +18,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const logout = () => {
         localStorage.removeItem('authToken');
+        console.log('Logging out, setting isLoggedIn to false');
         setIsLoggedIn(false);
     };
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
         console.log('Auth Token in localStorage:', token);
-        setIsLoggedIn(!!localStorage.getItem('authToken'));
+        setIsLoggedIn(!!token);
     }, []);
 
     return (
