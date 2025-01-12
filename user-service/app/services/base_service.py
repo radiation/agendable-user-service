@@ -18,9 +18,17 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return self.repository.model.__name__
 
     async def create(self, create_data: CreateSchemaType) -> ModelType:
-        if hasattr(create_data, "password"):
-            create_data.password = get_password_hash(create_data.password)
-        return await self.repository.create(create_data.model_dump())
+        data_dict = create_data.model_dump()
+        if "password" in data_dict:
+            data_dict["hashed_password"] = get_password_hash(data_dict.pop("password"))
+
+        valid_fields = {
+            key: value
+            for key, value in data_dict.items()
+            if hasattr(self.repository.model, key)
+        }
+
+        return await self.repository.create(valid_fields)
 
     async def get_by_id(self, id: int) -> ModelType:
         entity = await self.repository.get_by_id(id)

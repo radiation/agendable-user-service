@@ -1,16 +1,11 @@
-from app.core.security import (
-    create_access_token,
-    decode_access_token,
-    get_password_hash,
-    verify_password,
-)
-from app.db.repositories.user_repo import UserRepository
-from app.db.session import get_db
+from app.api.dependencies import get_user_service
+from app.core.security import create_access_token, decode_access_token, verify_password
+from app.db.models import User
 from app.schemas.auth import Token
 from app.schemas.user import UserCreate, UserRetrieve
+from app.services.user_service import UserService
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -21,44 +16,42 @@ class LoginRequest(BaseModel):
 
 
 @router.post("/register", response_model=Token)
-async def register_user(user_create: UserCreate, db: AsyncSession = Depends(get_db)):
-    repo = UserRepository(db)
-    existing_user = await repo.get_user_by_email(user_create.email)
+async def register_user(
+    user_create: UserCreate,
+    service: UserService = Depends(get_user_service),
+) -> Token:
+    existing_user = await service.get_by_field(
+        field_name="email", value=user_create.email
+    )
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email is already registered",
         )
-    hashed_password = get_password_hash(user_create.password)
-    new_user = await repo.create_user(
-        email=user_create.email,
-        hashed_password=hashed_password,
-    )
-    token = create_access_token(data={"sub": new_user.email})
+    new_user = await service.create(user_create)
+    token = create_access_token(data={"sub": new_user.email, "id": new_user.id})
     return {"access_token": token, "token_type": "bearer"}
 
 
 @router.post("/login", response_model=Token)
 async def login_user(
     login_request: LoginRequest,
-    db: AsyncSession = Depends(get_db),
-):
-    print("login_request", login_request)
-    repo = UserRepository(db)
-    user = await repo.get_user_by_email(login_request.email)
-    if not user or not verify_password(login_request.password, user.hashed_password):
+    service: UserService = Depends(get_user_service),
+) -> Token:
+    user: list[User] = await service.get_by_field(
+        field_name="email", value=login_request.email
+    )
+    if not user or not verify_password(login_request.password, user[0].hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
         )
-    token = create_access_token(data={"sub": user.email})
+    token = create_access_token(data={"sub": user[0].email})
     return {"access_token": token, "token_type": "bearer"}
 
 
 @router.get("/protected-route", response_model=UserRetrieve)
 async def protected_route(authorization: str = Header(...)):
-    print(f"Authorization header received: {authorization}")
-    print(authorization.startswith("Bearer "))
     if not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token format"
@@ -70,5 +63,4 @@ async def protected_route(authorization: str = Header(...)):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
-    # Simulating the logged-in user from the token payload
     return {"id": 1, "email": payload["sub"]}
