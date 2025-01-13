@@ -1,5 +1,7 @@
 import pytest
 from app.db.models import Base
+from app.db.repositories.group_repo import GroupRepository
+from app.db.repositories.role_repo import RoleRepository
 from app.db.repositories.user_repo import UserRepository
 from app.db.session import get_db
 from app.main import app
@@ -62,4 +64,18 @@ async def test_client(db_session):
 async def user_service(db_session):
     repo = UserRepository(db_session)
     service = UserRepository(repo)
+    return service
+
+
+@pytest.fixture
+async def group_service(db_session):
+    repo = GroupRepository(db_session)
+    service = GroupRepository(repo)
+    return service
+
+
+@pytest.fixture
+async def role_service(db_session):
+    repo = RoleRepository(db_session)
+    service = RoleRepository(repo)
     return service
