@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install system dependencies, including g++
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc g++ build-essential && \
+    libpq-dev gcc g++ build-essential redis-tools && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
