@@ -19,4 +19,4 @@ async def test_user_registration(test_client):
         json={"email": "test@example.com", "password": "securepassword"},
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "Email is already registered"
+    assert response.json()["detail"] == "User with this email already exists"

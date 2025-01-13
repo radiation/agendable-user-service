@@ -29,9 +29,12 @@ async def create_group(
 async def get_group_by_name(
     name: str, service: GroupService = Depends(get_group_service)
 ) -> GroupRetrieve:
+    logger.info(f"Fetching group with name: {name}")
     group = await service.get_by_field("name", name)
     if not group:
+        logger.warning(f"Group with name {name} not found")
         raise NotFoundError(f"Group with name {name} not found")
+    logger.info(f"Group retrieved: {group}")
     return group[0]
 
 
@@ -39,14 +42,23 @@ async def get_group_by_name(
 async def get_group(
     group_id: int, service: GroupService = Depends(get_group_service)
 ) -> GroupRetrieve:
-    return await service.get_by_id(group_id)
+    logger.info(f"Fetching group with ID: {group_id}")
+    result = await service.get_by_id(group_id)
+    if result is None:
+        logger.warning(f"Group with ID {group_id} not found")
+        raise NotFoundError(f"Group with ID {group_id} not found")
+    logger.info(f"Group retrieved: {result}")
+    return result
 
 
 @router.get("/", response_model=list[GroupRetrieve])
 async def get_groups(
     service: GroupService = Depends(get_group_service),
 ) -> list[GroupRetrieve]:
-    return await service.get_all()
+    logger.info("Fetching all groups")
+    result = await service.get_all()
+    logger.info(f"Retrieved {len(result)} groups")
+    return result
 
 
 @router.put("/{group_id}", response_model=GroupRetrieve)
@@ -55,13 +67,23 @@ async def update_group(
     group_update: GroupUpdate,
     service: GroupService = Depends(get_group_service),
 ) -> GroupRetrieve:
-    return await service.update(group_id, group_update)
+    logger.info(
+        f"Updating group with ID: {group_id} with data: {group_update.model_dump()}"
+    )
+    result = await service.update(group_id, group_update)
+    if result is None:
+        logger.warning(f"Group with ID {group_id} not found")
+        raise NotFoundError(f"Group with ID {group_id} not found")
+    logger.info(f"Group updated: {result}")
+    return result
 
 
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_group(
     group_id: int, service: GroupService = Depends(get_group_service)
 ) -> None:
+    logger.info(f"Deleting group with ID: {group_id}")
     status = await service.delete(group_id)
     if not status:
+        logger.warning(f"Group with ID {group_id} not found")
         raise NotFoundError(f"Group with ID {group_id} not found")

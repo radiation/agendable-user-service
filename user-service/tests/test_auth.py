@@ -6,7 +6,7 @@ from app.db.repositories.user_repo import UserRepository
 @pytest.mark.asyncio
 async def test_user_registration_and_login(test_client, db_session):
     # Registration payload
-    user_data = {"email": "test@example.com", "password": "securepassword"}
+    user_data = {"email": "test_auth@example.com", "password": "securepassword"}
 
     # Step 1: Register a new user
     response = await test_client.post("/auth/register", json=user_data)
