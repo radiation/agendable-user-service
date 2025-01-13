@@ -1,9 +1,11 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
 class GroupBase(BaseModel):
     name: str
-    description: str
+    description: Optional[str] = None
 
 
 class GroupCreate(GroupBase):

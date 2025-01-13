@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
-# Association tables
+
 user_roles = Table(
     "user_roles",
     Base.metadata,
@@ -55,7 +55,7 @@ class Role(Base):
     name = Column(String(50), unique=True, nullable=False)
     description = Column(String, nullable=True)
 
-    users = relationship("User", secondary=user_roles, back_populates="roles")
+    users = relationship("User", secondary="user_roles", back_populates="roles")
 
 
 class Group(Base):
@@ -65,4 +65,4 @@ class Group(Base):
     name = Column(String(50), unique=True, nullable=False)
     description = Column(String, nullable=True)
 
-    users = relationship("User", secondary=group_users, back_populates="groups")
+    users = relationship("User", secondary="group_users", back_populates="groups")

@@ -19,7 +19,8 @@ else
 fi
 
 # Check and create routes for the User Service
-ROUTES=("user-service_docs:/docs" "auth_route:/auth" "users_route:/users" "openapi_json:/openapi.json")
+ROUTES=("user-service_docs:/docs" "auth_route:/auth" "users_route:/users" \
+        "roles_route:/roles" "groups_route:/groups" "openapi_json:/openapi.json")
 for ROUTE in "${ROUTES[@]}"; do
     NAME=$(echo "$ROUTE" | /usr/bin/cut -d':' -f1)
     PATH=$(echo "$ROUTE" | /usr/bin/cut -d':' -f2)
