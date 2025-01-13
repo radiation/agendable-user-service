@@ -1,7 +1,22 @@
 from app.api.routes import auth_routes, group_routes, role_routes, user_routes
+from app.exceptions import (
+    ForbiddenError,
+    NotFoundError,
+    ValidationError,
+    forbidden_exception_handler,
+    generic_exception_handler,
+    not_found_exception_handler,
+    validation_exception_handler,
+)
 from fastapi import FastAPI
 
 app = FastAPI(title="User Service", version="1.0.0")
+
+# Register exception handlers
+app.add_exception_handler(ForbiddenError, forbidden_exception_handler)
+app.add_exception_handler(NotFoundError, not_found_exception_handler)
+app.add_exception_handler(ValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 # Include routers
 app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
