@@ -1,5 +1,7 @@
+import json
 from typing import Generic, TypeVar
 
+from app.core.redis_client import redis_client
 from app.core.security import get_password_hash
 from app.db.repositories.base_repo import BaseRepository
 from app.exceptions import NotFoundError
@@ -17,6 +19,19 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def _get_model_name(self) -> str:
         return self.repository.model.__name__
 
+    async def _publish_event(self, event_type: str, payload: dict):
+        sensitive_fields = {"password", "hashed_password"}
+        filtered_payload = {
+            key: value for key, value in payload.items() if key not in sensitive_fields
+        }
+        event = {
+            "event_type": event_type,
+            "model": self._get_model_name(),
+            "payload": filtered_payload,
+        }
+        channel = f"{self._get_model_name()}_events"
+        redis_client.publish(channel, json.dumps(event))
+
     async def create(self, create_data: CreateSchemaType) -> ModelType:
         data_dict = create_data.model_dump()
         if "password" in data_dict:
@@ -28,7 +43,9 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             if hasattr(self.repository.model, key)
         }
 
-        return await self.repository.create(valid_fields)
+        entity = await self.repository.create(valid_fields)
+        await self._publish_event("create", valid_fields)
+        return entity
 
     async def get_by_id(self, id: int) -> ModelType:
         entity = await self.repository.get_by_id(id)
@@ -50,9 +67,10 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise NotFoundError(
                 detail=f"{self._get_model_name()} with ID {id} not found"
             )
-        return await self.repository.update(
-            id, update_data.model_dump(exclude_unset=True)
-        )
+        updated_fields = update_data.model_dump(exclude_unset=True)
+        updated_entity = await self.repository.update(id, updated_fields)
+        await self._publish_event("update", {"id": id, **updated_fields})
+        return updated_entity
 
     async def delete(self, id: int) -> bool:
         entity = await self.repository.get_by_id(id)
@@ -60,4 +78,8 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise NotFoundError(
                 detail=f"{self._get_model_name()} with ID {id} not found"
             )
-        return await self.repository.delete(id)
+
+        success = await self.repository.delete(id)
+        if success:
+            await self._publish_event("delete", {"id": id})
+        return success
