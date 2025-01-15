@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 
@@ -11,11 +13,25 @@ async def test_role_crud_operations(test_client, mock_redis_client):
     role_data = response.json()
     assert role_data["name"] == "crudrole"
 
+    mock_redis_client.publish.assert_awaited_with(
+        "Role_events",
+        json.dumps(
+            {
+                "event_type": "create",
+                "model": "Role",
+                "payload": {
+                    "name": "crudrole",
+                    "description": "Role for CRUD operations",
+                },
+            }
+        ),
+    )
+
     # Read a role by name
     response = await test_client.get("/roles/by-name?name=crudrole")
-    print(response.json())
     assert response.status_code == 200
     role_data = response.json()
+    role_id = role_data["id"]
     assert role_data["name"] == "crudrole"
 
     # Update the role
@@ -27,8 +43,30 @@ async def test_role_crud_operations(test_client, mock_redis_client):
     updated_data = response.json()
     assert updated_data["name"] == "updatedrole"
 
+    mock_redis_client.publish.assert_awaited_with(
+        "Role_events",
+        json.dumps(
+            {
+                "event_type": "update",
+                "model": "Role",
+                "payload": {"id": role_data["id"], "name": "updatedrole"},
+            }
+        ),
+    )
+
     # Delete the role
     response = await test_client.delete(
         f"/roles/{role_data['id']}",
     )
     assert response.status_code == 204
+
+    mock_redis_client.publish.assert_awaited_with(
+        "Role_events",
+        json.dumps(
+            {
+                "event_type": "delete",
+                "model": "Role",
+                "payload": {"id": role_id},
+            }
+        ),
+    )

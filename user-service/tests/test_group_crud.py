@@ -1,8 +1,10 @@
+import json
+
 import pytest
 
 
 @pytest.mark.asyncio
-async def test_group_crud_operations(test_client):
+async def test_group_crud_operations(test_client, mock_redis_client):
     group_data = {
         "name": "crudgroup",
         "description": "Group for CRUD operations",
@@ -16,6 +18,20 @@ async def test_group_crud_operations(test_client):
     assert response.status_code == 200
     group_data = response.json()
     assert group_data["name"] == "crudgroup"
+
+    mock_redis_client.publish.assert_awaited_once_with(
+        "Group_events",
+        json.dumps(
+            {
+                "event_type": "create",
+                "model": "Group",
+                "payload": {
+                    "name": "crudgroup",
+                    "description": "Group for CRUD operations",
+                },
+            }
+        ),
+    )
 
     # Read a group by name
     response = await test_client.get("/groups/by-name?name=crudgroup")
@@ -32,8 +48,30 @@ async def test_group_crud_operations(test_client):
     updated_data = response.json()
     assert updated_data["name"] == "updatedgroup"
 
+    mock_redis_client.publish.assert_awaited_with(
+        "Group_events",
+        json.dumps(
+            {
+                "event_type": "update",
+                "model": "Group",
+                "payload": {"id": group_data["id"], "name": "updatedgroup"},
+            }
+        ),
+    )
+
     # Delete the group
     response = await test_client.delete(
         f"/groups/{group_data['id']}",
     )
     assert response.status_code == 204
+
+    mock_redis_client.publish.assert_awaited_with(
+        "Group_events",
+        json.dumps(
+            {
+                "event_type": "delete",
+                "model": "Group",
+                "payload": {"id": group_data["id"]},
+            }
+        ),
+    )
