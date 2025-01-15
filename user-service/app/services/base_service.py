@@ -1,10 +1,11 @@
 import json
 from typing import Generic, TypeVar
 
-from app.core.redis_client import redis_client
+from app.core.redis_client import RedisClient
 from app.core.security import get_password_hash
 from app.db.repositories.base_repo import BaseRepository
 from app.exceptions import NotFoundError
+from loguru import logger
 from pydantic import BaseModel
 
 ModelType = TypeVar("ModelType")
@@ -13,13 +14,19 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
 class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-    def __init__(self, repository: BaseRepository[ModelType]):
+    def __init__(
+        self, repository: BaseRepository[ModelType], redis_client: RedisClient
+    ):
+        logger.info(self)
+        logger.info(redis_client)
         self.repository = repository
+        self.redis_client = redis_client
 
     def _get_model_name(self) -> str:
         return self.repository.model.__name__
 
     async def _publish_event(self, event_type: str, payload: dict):
+        logger.info(self.redis_client)
         sensitive_fields = {"password", "hashed_password"}
         filtered_payload = {
             key: value for key, value in payload.items() if key not in sensitive_fields
@@ -30,7 +37,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             "payload": filtered_payload,
         }
         channel = f"{self._get_model_name()}_events"
-        redis_client.publish(channel, json.dumps(event))
+        await self.redis_client.publish(channel, json.dumps(event))
 
     async def create(self, create_data: CreateSchemaType) -> ModelType:
         data_dict = create_data.model_dump()
