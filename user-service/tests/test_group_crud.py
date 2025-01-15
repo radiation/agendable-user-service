@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_group_crud_operations(test_client, db_session):
+async def test_group_crud_operations(test_client):
     group_data = {
         "name": "crudgroup",
         "description": "Group for CRUD operations",

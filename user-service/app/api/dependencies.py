@@ -1,3 +1,4 @@
+from app.core.redis_client import redis_client
 from app.core.security import oauth2_scheme
 from app.core.settings import settings
 from app.db.repositories.group_repo import GroupRepository
@@ -16,24 +17,30 @@ def get_user_repository(db=Depends(get_db)) -> UserRepository:
     return UserRepository(db)
 
 
-def get_user_service(repo=Depends(get_user_repository)) -> UserService:
-    return UserService(repo)
+def get_user_service(
+    repo=Depends(get_user_repository), redis=Depends(lambda: redis_client)
+) -> UserService:
+    return UserService(repo, redis)
 
 
 def get_group_repository(db=Depends(get_db)) -> GroupRepository:
     return GroupRepository(db)
 
 
-def get_group_service(repo=Depends(get_group_repository)) -> GroupService:
-    return GroupService(repo)
+def get_group_service(
+    repo=Depends(get_group_repository), redis=Depends(lambda: redis_client)
+) -> GroupService:
+    return GroupService(repo, redis)
 
 
 def get_role_repository(db=Depends(get_db)) -> RoleRepository:
     return RoleRepository(db)
 
 
-def get_role_service(repo=Depends(get_role_repository)) -> RoleService:
-    return RoleService(repo)
+def get_role_service(
+    repo=Depends(get_role_repository), redis=Depends(lambda: redis_client)
+) -> RoleService:
+    return RoleService(repo, redis)
 
 
 def get_auth_service(repo=Depends(get_user_repository)) -> AuthService:

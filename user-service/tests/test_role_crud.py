@@ -2,10 +2,11 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_role_crud_operations(test_client, db_session):
-    payload = {"name": "crudrole", "description": "Role for CRUD operations"}
+async def test_role_crud_operations(test_client, mock_redis_client):
+    role_data = {"name": "crudrole", "description": "Role for CRUD operations"}
+
     # Create a role
-    response = await test_client.post("/roles/", json=payload)
+    response = await test_client.post("/roles/", json=role_data)
     assert response.status_code == 200
     role_data = response.json()
     assert role_data["name"] == "crudrole"
