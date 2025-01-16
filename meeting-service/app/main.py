@@ -1,10 +1,9 @@
 import os
 
 from app.api.routes import (
-    meeting_attendee_routes,
-    meeting_recurrence_routes,
+    attendee_routes,
     meeting_routes,
-    meeting_task_routes,
+    recurrence_routes,
     task_routes,
 )
 from app.core.logging_config import logger
@@ -39,17 +38,14 @@ app.add_exception_handler(Exception, generic_exception_handler)
 app.include_router(meeting_routes.router, prefix="/meetings", tags=["meetings"])
 app.include_router(task_routes.router, prefix="/tasks", tags=["tasks"])
 app.include_router(
-    meeting_task_routes.router, prefix="/meeting_tasks", tags=["meeting_tasks"]
+    attendee_routes.router,
+    prefix="/attendees",
+    tags=["attendees"],
 )
 app.include_router(
-    meeting_attendee_routes.router,
-    prefix="/meeting_attendees",
-    tags=["meeting_attendees"],
-)
-app.include_router(
-    meeting_recurrence_routes.router,
-    prefix="/meeting_recurrences",
-    tags=["meeting_recurrences"],
+    recurrence_routes.router,
+    prefix="/recurrences",
+    tags=["recurrences"],
 )
 
 

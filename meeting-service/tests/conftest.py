@@ -2,16 +2,14 @@ import pytest
 from app.api.routes.meeting_routes import get_attendee
 from app.db.db import get_db
 from app.db.models import Base
-from app.db.repositories.meeting_attendee_repo import MeetingAttendeeRepository
-from app.db.repositories.meeting_recurrence_repo import MeetingRecurrenceRepository
+from app.db.repositories.attendee_repo import AttendeeRepository
 from app.db.repositories.meeting_repo import MeetingRepository
-from app.db.repositories.meeting_task_repo import MeetingTaskRepository
+from app.db.repositories.recurrence_repo import RecurrenceRepository
 from app.db.repositories.task_repo import TaskRepository
 from app.main import app
-from app.services.meeting_attendee_service import MeetingAttendeeService
-from app.services.meeting_recurrence_service import MeetingRecurrenceService
+from app.services.attendee_service import AttendeeService
 from app.services.meeting_service import MeetingService
-from app.services.meeting_task_service import MeetingTaskService
+from app.services.recurrence_service import RecurrenceService
 from app.services.task_service import TaskService
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -77,16 +75,16 @@ async def meeting_service(db_session):
 
 
 @pytest.fixture
-async def meeting_attendee_service(db_session):
-    repo = MeetingAttendeeRepository(db_session)
-    service = MeetingAttendeeService(repo)
+async def attendee_service(db_session):
+    repo = AttendeeRepository(db_session)
+    service = AttendeeService(repo)
     return service
 
 
 @pytest.fixture
-async def meeting_recurrence_service(db_session):
-    repo = MeetingRecurrenceRepository(db_session)
-    service = MeetingRecurrenceService(repo)
+async def recurrence_service(db_session):
+    repo = RecurrenceRepository(db_session)
+    service = RecurrenceService(repo)
     return service
 
 
@@ -94,11 +92,4 @@ async def meeting_recurrence_service(db_session):
 async def task_service(db_session):
     repo = TaskRepository(db_session)
     service = TaskService(repo)
-    return service
-
-
-@pytest.fixture
-async def meeting_task_service(db_session):
-    repo = MeetingTaskRepository(db_session)
-    service = MeetingTaskService(repo)
     return service

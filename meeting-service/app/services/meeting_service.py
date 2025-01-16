@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from app.core.logging_config import logger
-from app.db.models import Meeting, MeetingRecurrence
-from app.db.repositories.meeting_attendee_repo import MeetingAttendeeRepository
+from app.db.models import Meeting, Recurrence
+from app.db.repositories.attendee_repo import AttendeeRepository
 from app.db.repositories.meeting_repo import MeetingRepository
 from app.exceptions import NotFoundError, ValidationError
 from app.schemas.meeting_schemas import MeetingCreate, MeetingRetrieve, MeetingUpdate
@@ -11,9 +11,7 @@ from dateutil.rrule import rrulestr
 
 
 class MeetingService(BaseService[Meeting, MeetingCreate, MeetingUpdate]):
-    def __init__(
-        self, repo: MeetingRepository, attendee_repo: MeetingAttendeeRepository
-    ):
+    def __init__(self, repo: MeetingRepository, attendee_repo: AttendeeRepository):
         super().__init__(repo, model_name="Meeting")
         self.attendee_repo = attendee_repo
 
@@ -25,9 +23,7 @@ class MeetingService(BaseService[Meeting, MeetingCreate, MeetingUpdate]):
                 with data: {meeting_data.model_dump()}"
         )
         if meeting_data.recurrence_id:
-            recurrence = await self.repo.db.get(
-                MeetingRecurrence, meeting_data.recurrence_id
-            )
+            recurrence = await self.repo.db.get(Recurrence, meeting_data.recurrence_id)
             if not recurrence:
                 logger.warning(
                     f"Recurrence with ID {meeting_data.recurrence_id} not found"
@@ -88,7 +84,7 @@ class MeetingService(BaseService[Meeting, MeetingCreate, MeetingUpdate]):
                 detail=f"Meeting {meeting_id} does not have a recurrence set"
             )
 
-        recurrence = await self.repo.db.get(MeetingRecurrence, meeting.recurrence_id)
+        recurrence = await self.repo.db.get(Recurrence, meeting.recurrence_id)
         if not recurrence:
             logger.warning(f"Recurrence with ID {meeting.recurrence_id} not found")
             raise NotFoundError(
@@ -122,7 +118,7 @@ class MeetingService(BaseService[Meeting, MeetingCreate, MeetingUpdate]):
                 detail=f"Meeting with ID {meeting.id} does not have a recurrence set"
             )
 
-        recurrence = await self.repo.db.get(MeetingRecurrence, meeting.recurrence_id)
+        recurrence = await self.repo.db.get(Recurrence, meeting.recurrence_id)
         if not recurrence:
             logger.warning(f"Recurrence with ID {meeting.recurrence_id} not found")
             raise NotFoundError(
@@ -187,7 +183,7 @@ class MeetingService(BaseService[Meeting, MeetingCreate, MeetingUpdate]):
         logger.info(
             f"Creating recurring meetings for recurrence with ID: {recurrence_id}"
         )
-        recurrence = await self.repo.db.get(MeetingRecurrence, recurrence_id)
+        recurrence = await self.repo.db.get(Recurrence, recurrence_id)
         if not recurrence:
             logger.warning(f"Recurrence with ID {recurrence_id} not found")
             raise NotFoundError(detail=f"Recurrence with ID {recurrence_id} not found")
