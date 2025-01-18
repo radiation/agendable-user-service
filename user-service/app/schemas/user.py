@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
@@ -13,12 +14,14 @@ class UserCreate(UserBase):
     password: str
 
 
-class UserUpdate(UserBase):
-    id: int
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
 
 
 class UserRetrieve(UserBase):
-    id: int
+    id: UUID
 
     model_config = {"from_attributes": True}
 

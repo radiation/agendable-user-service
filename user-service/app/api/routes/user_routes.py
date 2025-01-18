@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from app.api.dependencies import get_current_user, get_user_service
 from app.exceptions import NotFoundError, ValidationError
 from app.schemas.user import UserCreate, UserRetrieve, UserUpdate
@@ -53,7 +55,7 @@ async def get_user_by_email(
 
 @router.get("/{user_id}", response_model=UserRetrieve)
 async def get_user(
-    user_id: int, service: UserService = Depends(get_user_service)
+    user_id: UUID, service: UserService = Depends(get_user_service)
 ) -> UserRetrieve:
     logger.info(f"Fetching user with ID: {user_id}")
     result = await service.get_by_id(user_id)
@@ -76,7 +78,7 @@ async def get_users(
 
 @router.put("/{user_id}", response_model=UserRetrieve)
 async def update_user(
-    user_id: int,
+    user_id: UUID,
     user_update: UserUpdate,
     service: UserService = Depends(get_user_service),
 ) -> UserRetrieve:
@@ -90,7 +92,7 @@ async def update_user(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: int, service: UserService = Depends(get_user_service)):
+async def delete_user(user_id: UUID, service: UserService = Depends(get_user_service)):
     logger.info(f"Deleting user with ID: {user_id}")
     success = await service.delete(user_id)
     if not success:

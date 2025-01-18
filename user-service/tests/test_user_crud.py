@@ -47,7 +47,7 @@ async def test_user_crud_operations(test_client, mock_redis_client):
     response = await test_client.put(
         f"/users/{user_data['id']}",
         headers={"Authorization": f"Bearer {token}"},
-        json={"id": user_data["id"], "email": "updateduser@example.com"},
+        json={"email": "updateduser@example.com"},
     )
     assert response.status_code == 200
     updated_data = response.json()

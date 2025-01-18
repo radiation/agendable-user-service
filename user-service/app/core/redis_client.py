@@ -1,6 +1,6 @@
 import os
 
-import redis
+from redis.asyncio import Redis
 
 
 class RedisClient:
@@ -12,7 +12,7 @@ class RedisClient:
         self.redis_password = os.getenv("REDIS_PASSWORD", None)
 
         # Initialize the Redis client
-        self.client = redis.Redis(
+        self.client = Redis(
             host=self.redis_host,
             port=self.redis_port,
             db=self.redis_db,
