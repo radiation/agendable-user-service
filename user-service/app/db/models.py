@@ -1,4 +1,7 @@
+import uuid
+
 from sqlalchemy import Boolean, Column, ForeignKey, Index, Integer, String, Table
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -8,13 +11,15 @@ user_roles = Table(
     "user_roles",
     Base.metadata,
     Column(
-        "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+        "user_id",
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
     ),
     Column(
         "role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True
     ),
 )
-
 
 group_users = Table(
     "group_users",
@@ -26,7 +31,10 @@ group_users = Table(
         primary_key=True,
     ),
     Column(
-        "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+        "user_id",
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
     ),
 )
 
@@ -35,7 +43,7 @@ class User(Base):
     __tablename__ = "users"
     __table_args__ = (Index("ix_user_email", "email"),)
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, index=True, nullable=False)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)

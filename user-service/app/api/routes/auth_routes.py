@@ -31,9 +31,10 @@ async def register_user(
         raise ValidationError("User with this email already exists")
     else:
         try:
-            new_user = await service.create(user_create)
+            new_user: User = await service.create(user_create)
             logger.info(f"User created successfully with ID: {new_user.id}")
             token = create_access_token(data={"sub": new_user.email, "id": new_user.id})
+            logger.debug(f"Token: {token}")
             return {"access_token": token, "token_type": "bearer"}
         except Exception:
             logger.exception("Unexpected error while creating user")

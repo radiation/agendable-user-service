@@ -17,8 +17,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(
         self, repository: BaseRepository[ModelType], redis_client: RedisClient
     ):
-        logger.info(self)
-        logger.info(redis_client)
         self.repository = repository
         self.redis_client = redis_client
 
@@ -26,7 +24,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return self.repository.model.__name__
 
     async def _publish_event(self, event_type: str, payload: dict):
-        logger.info(self.redis_client)
         sensitive_fields = {"password", "hashed_password"}
         filtered_payload = {
             key: value for key, value in payload.items() if key not in sensitive_fields
@@ -37,7 +34,8 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             "payload": filtered_payload,
         }
         channel = f"{self._get_model_name()}_events"
-        await self.redis_client.publish(channel, json.dumps(event))
+        logger.info(f"Publishing event to channel {channel}: {event}")
+        await self.redis_client.publish(channel, json.dumps(event, default=str))
 
     async def create(self, create_data: CreateSchemaType) -> ModelType:
         data_dict = create_data.model_dump()

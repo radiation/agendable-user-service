@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from uuid import UUID
 
 from app.core.settings import settings
 from fastapi.security import OAuth2PasswordBearer
@@ -23,10 +24,15 @@ def get_password_hash(password):
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
+
+    if "id" in to_encode and isinstance(to_encode["id"], UUID):
+        to_encode["id"] = str(to_encode["id"])
+
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+
     to_encode.update({"exp": expire, "iss": "user-service"})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
