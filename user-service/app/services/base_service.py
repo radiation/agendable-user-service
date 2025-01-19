@@ -33,22 +33,34 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             "model": self._get_model_name(),
             "payload": filtered_payload,
         }
-        channel = f"{self._get_model_name()}_events"
+        channel = f"{self._get_model_name().lower()}-events"
         logger.info(f"Publishing event to channel {channel}: {event}")
         await self.redis_client.publish(channel, json.dumps(event, default=str))
 
     async def create(self, create_data: CreateSchemaType) -> ModelType:
         data_dict = create_data.model_dump()
+        logger.debug(f"Creating {self._get_model_name()} with data: {data_dict}")
+
+        # Hash password if it exists in the data
         if "password" in data_dict:
             data_dict["hashed_password"] = get_password_hash(data_dict.pop("password"))
 
+        # Filter valid fields based on the model
         valid_fields = {
             key: value
             for key, value in data_dict.items()
             if hasattr(self.repository.model, key)
         }
 
+        # Create the entity in the database
         entity = await self.repository.create(valid_fields)
+
+        # Add the ID from the created entity to the event payload
+        valid_fields["id"] = str(
+            entity.id
+        )  # Convert UUID to string for JSON compatibility
+
+        # Publish the creation event with the full payload
         await self._publish_event("create", valid_fields)
         return entity
 

@@ -14,7 +14,7 @@ async def test_role_crud_operations(test_client, mock_redis_client):
     assert role_data["name"] == "crudrole"
 
     mock_redis_client.publish.assert_awaited_with(
-        "Role_events",
+        "role-events",
         json.dumps(
             {
                 "event_type": "create",
@@ -22,6 +22,7 @@ async def test_role_crud_operations(test_client, mock_redis_client):
                 "payload": {
                     "name": "crudrole",
                     "description": "Role for CRUD operations",
+                    "id": str(role_data["id"]),
                 },
             }
         ),
@@ -44,12 +45,12 @@ async def test_role_crud_operations(test_client, mock_redis_client):
     assert updated_data["name"] == "updatedrole"
 
     mock_redis_client.publish.assert_awaited_with(
-        "Role_events",
+        "role-events",
         json.dumps(
             {
                 "event_type": "update",
                 "model": "Role",
-                "payload": {"id": role_data["id"], "name": "updatedrole"},
+                "payload": {"id": int(role_id), "name": "updatedrole"},
             }
         ),
     )
@@ -61,12 +62,12 @@ async def test_role_crud_operations(test_client, mock_redis_client):
     assert response.status_code == 204
 
     mock_redis_client.publish.assert_awaited_with(
-        "Role_events",
+        "role-events",
         json.dumps(
             {
                 "event_type": "delete",
                 "model": "Role",
-                "payload": {"id": role_id},
+                "payload": {"id": int(role_id)},
             }
         ),
     )
