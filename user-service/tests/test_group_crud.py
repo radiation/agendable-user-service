@@ -20,7 +20,7 @@ async def test_group_crud_operations(test_client, mock_redis_client):
     assert group_data["name"] == "crudgroup"
 
     mock_redis_client.publish.assert_awaited_once_with(
-        "Group_events",
+        "group-events",
         json.dumps(
             {
                 "event_type": "create",
@@ -28,6 +28,7 @@ async def test_group_crud_operations(test_client, mock_redis_client):
                 "payload": {
                     "name": "crudgroup",
                     "description": "Group for CRUD operations",
+                    "id": str(group_data["id"]),
                 },
             }
         ),
@@ -49,12 +50,12 @@ async def test_group_crud_operations(test_client, mock_redis_client):
     assert updated_data["name"] == "updatedgroup"
 
     mock_redis_client.publish.assert_awaited_with(
-        "Group_events",
+        "group-events",
         json.dumps(
             {
                 "event_type": "update",
                 "model": "Group",
-                "payload": {"id": group_data["id"], "name": "updatedgroup"},
+                "payload": {"id": int(group_data["id"]), "name": "updatedgroup"},
             }
         ),
     )
@@ -66,12 +67,12 @@ async def test_group_crud_operations(test_client, mock_redis_client):
     assert response.status_code == 204
 
     mock_redis_client.publish.assert_awaited_with(
-        "Group_events",
+        "group-events",
         json.dumps(
             {
                 "event_type": "delete",
                 "model": "Group",
-                "payload": {"id": group_data["id"]},
+                "payload": {"id": int(group_data["id"])},
             }
         ),
     )

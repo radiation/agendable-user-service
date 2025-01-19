@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from app.core.security import decode_access_token
 
 
 @pytest.mark.asyncio
@@ -8,22 +9,31 @@ async def test_user_crud_operations(test_client, mock_redis_client):
     # Create a user
     response = await test_client.post(
         "/auth/register",
-        json={"email": "cruduser@example.com", "password": "securepassword"},
+        json={
+            "email": "cruduser@example.com",
+            "first_name": "Crud",
+            "last_name": "User",
+            "password": "securepassword",
+        },
     )
     assert response.status_code == 200
     token_data = response.json()
     token = token_data["access_token"]
+    decoded_token = decode_access_token(token)
 
     mock_redis_client.publish.assert_awaited_with(
-        "User_events",
+        "user-events",
         json.dumps(
             {
                 "event_type": "create",
                 "model": "User",
                 "payload": {
                     "email": "cruduser@example.com",
+                    "first_name": "Crud",
+                    "last_name": "User",
                     "is_active": True,
                     "is_superuser": False,
+                    "id": decoded_token["id"],
                 },
             }
         ),
@@ -54,7 +64,7 @@ async def test_user_crud_operations(test_client, mock_redis_client):
     assert updated_data["email"] == "updateduser@example.com"
 
     mock_redis_client.publish.assert_awaited_with(
-        "User_events",
+        "user-events",
         json.dumps(
             {
                 "event_type": "update",
@@ -74,7 +84,7 @@ async def test_user_crud_operations(test_client, mock_redis_client):
     assert response.status_code == 204
 
     mock_redis_client.publish.assert_awaited_with(
-        "User_events",
+        "user-events",
         json.dumps(
             {
                 "event_type": "delete",
