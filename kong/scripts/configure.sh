@@ -102,8 +102,8 @@ done
 
 # Create Routes for Meeting Service
 MEETING_ROUTES=("meeting_service_docs:/docs" "meetings_route:/meetings" \
-                "recurrences_route:/meeting_recurrences" "attendees_route:/meeting_attendees" \
-                "tasks_route:/tasks" "meeting_tasks_route:/meeting_tasks" \
+                "recurrences_route:/recurrences" \
+                "tasks_route:/tasks" "tasks_route:/tasks" \
                 "openapi_json:/openapi.json" "meeting_users_route:/meeting_users")
 for ROUTE in "${MEETING_ROUTES[@]}"; do
     NAME=$(echo "$ROUTE" | /usr/bin/cut -d':' -f1)
