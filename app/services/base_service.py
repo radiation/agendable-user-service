@@ -1,12 +1,13 @@
 import json
 from typing import Generic, TypeVar
 
+from loguru import logger
+from pydantic import BaseModel
+
 from app.core.redis_client import RedisClient
 from app.core.security import get_password_hash
 from app.db.repositories.base_repo import BaseRepository
 from app.exceptions import NotFoundError
-from loguru import logger
-from pydantic import BaseModel
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -55,20 +56,18 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         # Create the entity in the database
         entity = await self.repository.create(valid_fields)
 
-        # Add the ID from the created entity to the event payload
-        valid_fields["id"] = str(
-            entity.id
-        )  # Convert UUID to string for JSON compatibility
+        # Convert the ID to a string for the event payload
+        valid_fields["id"] = str(entity.id)
 
         # Publish the creation event with the full payload
         await self._publish_event("create", valid_fields)
         return entity
 
-    async def get_by_id(self, id: int) -> ModelType:
-        entity = await self.repository.get_by_id(id)
+    async def get_by_id(self, entity_id: int) -> ModelType:
+        entity = await self.repository.get_by_id(entity_id)
         if not entity:
             raise NotFoundError(
-                detail=f"{self._get_model_name()} with ID {id} not found"
+                detail=f"{self._get_model_name()} with ID {entity_id} not found"
             )
         return entity
 
@@ -78,25 +77,25 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get_all(self, skip: int = 0, limit: int = 10) -> list[ModelType]:
         return await self.repository.get_all(skip, limit)
 
-    async def update(self, id: int, update_data: UpdateSchemaType) -> ModelType:
-        entity = await self.repository.get_by_id(id)
+    async def update(self, entity_id: int, update_data: UpdateSchemaType) -> ModelType:
+        entity = await self.repository.get_by_id(entity_id)
         if not entity:
             raise NotFoundError(
-                detail=f"{self._get_model_name()} with ID {id} not found"
+                detail=f"{self._get_model_name()} with ID {entity_id} not found"
             )
         updated_fields = update_data.model_dump(exclude_unset=True)
-        updated_entity = await self.repository.update(id, updated_fields)
-        await self._publish_event("update", {"id": id, **updated_fields})
+        updated_entity = await self.repository.update(entity_id, updated_fields)
+        await self._publish_event("update", {"id": entity_id, **updated_fields})
         return updated_entity
 
-    async def delete(self, id: int) -> bool:
-        entity = await self.repository.get_by_id(id)
+    async def delete(self, entity_id: int) -> bool:
+        entity = await self.repository.get_by_id(entity_id)
         if not entity:
             raise NotFoundError(
-                detail=f"{self._get_model_name()} with ID {id} not found"
+                detail=f"{self._get_model_name()} with ID {entity_id} not found"
             )
 
-        success = await self.repository.delete(id)
+        success = await self.repository.delete(entity_id)
         if success:
-            await self._publish_event("delete", {"id": id})
+            await self._publish_event("delete", {"id": entity_id})
         return success

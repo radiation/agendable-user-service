@@ -1,3 +1,7 @@
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+from loguru import logger
+from pydantic import BaseModel, EmailStr
+
 from app.api.dependencies import get_user_service
 from app.core.security import create_access_token, decode_access_token, verify_password
 from app.db.models import User
@@ -5,9 +9,6 @@ from app.exceptions import ForbiddenError, NotFoundError, ValidationError
 from app.schemas.auth import Token
 from app.schemas.user import UserCreate, UserRetrieve
 from app.services.user_service import UserService
-from fastapi import APIRouter, Depends, Header, HTTPException, status
-from loguru import logger
-from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
 
@@ -29,16 +30,17 @@ async def register_user(
     if existing_user:
         logger.warning(f"User with email {user_create.email} already exists")
         raise ValidationError("User with this email already exists")
-    else:
-        try:
-            new_user: User = await service.create(user_create)
-            logger.info(f"User created successfully with ID: {new_user.id}")
-            token = create_access_token(data={"sub": new_user.email, "id": new_user.id})
-            logger.debug(f"Token: {token}")
-            return {"access_token": token, "token_type": "bearer"}
-        except Exception:
-            logger.exception("Unexpected error while creating user")
-            raise ValidationError("An unexpected error occurred. Please try again.")
+    try:
+        new_user: User = await service.create(user_create)
+        logger.info(f"User created successfully with ID: {new_user.id}")
+        token = create_access_token(data={"sub": new_user.email, "id": new_user.id})
+        logger.debug(f"Token: {token}")
+        return {"access_token": token, "token_type": "bearer"}
+    except Exception as exc:
+        logger.exception("Unexpected error while creating user")
+        raise ValidationError(
+            "An unexpected error occurred. Please try again."
+        ) from exc
 
 
 @router.post("/login", response_model=Token)
@@ -67,7 +69,9 @@ async def protected_route(authorization: str = Header(...)):
     token = authorization.split(" ")[1]
     try:
         payload = decode_access_token(token)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)
+        ) from exc
 
     return {"id": 1, "email": payload["sub"]}

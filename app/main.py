@@ -1,3 +1,5 @@
+from fastapi import FastAPI
+
 from app.api.routes import auth_routes, group_routes, role_routes, user_routes
 from app.exceptions import (
     ForbiddenError,
@@ -8,7 +10,6 @@ from app.exceptions import (
     not_found_exception_handler,
     validation_exception_handler,
 )
-from fastapi import FastAPI
 
 app = FastAPI(title="User Service", version="1.0.0")
 

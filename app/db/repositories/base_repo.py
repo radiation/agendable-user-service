@@ -18,8 +18,8 @@ class BaseRepository(Generic[ModelType]):
         await self.db.refresh(db_obj)
         return db_obj
 
-    async def get_by_id(self, id: int) -> ModelType:
-        stmt = select(self.model).filter(self.model.id == id)
+    async def get_by_id(self, entity_id: int) -> ModelType:
+        stmt = select(self.model).filter(self.model.id == entity_id)
         result = await self.db.execute(stmt)
         return result.unique().scalar()
 
@@ -33,8 +33,8 @@ class BaseRepository(Generic[ModelType]):
         result = await self.db.execute(stmt)
         return result.unique().scalars().all()
 
-    async def update(self, id: int, update_data: dict) -> ModelType:
-        obj = await self.get_by_id(id)
+    async def update(self, entity_id: int, update_data: dict) -> ModelType:
+        obj = await self.get_by_id(entity_id)
         if not obj:
             return None
         for key, value in update_data.items():
@@ -43,8 +43,8 @@ class BaseRepository(Generic[ModelType]):
         await self.db.refresh(obj)
         return obj
 
-    async def delete(self, id: int) -> bool:
-        obj = await self.get_by_id(id)
+    async def delete(self, entity_id: int) -> bool:
+        obj = await self.get_by_id(entity_id)
         if obj:
             await self.db.delete(obj)
             await self.db.commit()

@@ -1,3 +1,6 @@
+from fastapi import Depends, HTTPException, status
+from jose import JWTError, jwt
+
 from app.core.redis_client import redis_client
 from app.core.security import oauth2_scheme
 from app.core.settings import settings
@@ -9,8 +12,6 @@ from app.services.auth_service import AuthService
 from app.services.group_service import GroupService
 from app.services.role_service import RoleService
 from app.services.user_service import UserService
-from fastapi import Depends, HTTPException, status
-from jose import JWTError, jwt
 
 
 def get_user_repository(db=Depends(get_db)) -> UserRepository:
@@ -60,9 +61,9 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
         return email
-    except JWTError:
+    except JWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from exc

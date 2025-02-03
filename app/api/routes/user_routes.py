@@ -1,11 +1,12 @@
 from uuid import UUID
 
-from app.api.dependencies import get_current_user, get_user_service
-from app.exceptions import NotFoundError, ValidationError
-from app.schemas.user import UserCreate, UserRetrieve, UserUpdate
-from app.services.user_service import UserService
 from fastapi import APIRouter, Depends, status
 from loguru import logger
+
+from app.api.dependencies import get_current_user, get_user_service
+from app.exceptions import NotFoundError, handle_service_exceptions
+from app.schemas.user import UserCreate, UserRetrieve, UserUpdate
+from app.services.user_service import UserService
 
 router = APIRouter()
 
@@ -25,20 +26,11 @@ async def get_current_user_profile(
 
 
 @router.post("/", response_model=UserRetrieve)
+@handle_service_exceptions
 async def create_user(
     user: UserCreate, service: UserService = Depends(get_user_service)
 ) -> UserRetrieve:
-    try:
-        logger.info(f"Creating user with data: {user.model_dump()}")
-        result = await service.create(user)
-        logger.info(f"User created successfully with ID: {result.id}")
-        return result
-    except ValidationError as ve:
-        logger.warning(f"Validation error: {ve}")
-        raise
-    except Exception:
-        logger.exception("Unexpected error while creating user")
-        raise ValidationError("An unexpected error occurred. Please try again.")
+    return await service.create(user)
 
 
 @router.get("/by-email", response_model=UserRetrieve)

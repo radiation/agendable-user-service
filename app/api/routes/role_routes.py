@@ -1,28 +1,20 @@
-from app.api.dependencies import get_role_service
-from app.exceptions import NotFoundError, ValidationError
-from app.schemas.roles import RoleCreate, RoleRetrieve, RoleUpdate
-from app.services.role_service import RoleService
 from fastapi import APIRouter, Depends, status
 from loguru import logger
+
+from app.api.dependencies import get_role_service
+from app.exceptions import NotFoundError, handle_service_exceptions
+from app.schemas.roles import RoleCreate, RoleRetrieve, RoleUpdate
+from app.services.role_service import RoleService
 
 router = APIRouter()
 
 
 @router.post("/", response_model=RoleRetrieve)
+@handle_service_exceptions
 async def create_role(
     role: RoleCreate, service: RoleService = Depends(get_role_service)
 ) -> RoleRetrieve:
-    try:
-        logger.info(f"Creating role with data: {role.model_dump()}")
-        result = await service.create(role)
-        logger.info(f"Role created successfully with ID: {result.id}")
-        return result
-    except ValidationError as ve:
-        logger.warning(f"Validation error: {ve}")
-        raise
-    except Exception:
-        logger.exception("Unexpected error while creating role")
-        raise ValidationError("An unexpected error occurred. Please try again.")
+    return await service.create(role)
 
 
 @router.get("/by-name", response_model=RoleRetrieve)

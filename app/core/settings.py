@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     print("Settings SECRET_KEY: ", SECRET_KEY)
 
     # DB Connection
-    DB_PORT: int = int(os.getenv("POSTGRES_PORT", 5432))
+    DB_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
     DB_USER: str = os.getenv("POSTGRES_USER", "user")
     DB_PASS: str = os.getenv("POSTGRES_PASSWORD", "password")
     DB_NAME: str = os.getenv("POSTGRES_DB", "user_db")
@@ -24,8 +24,8 @@ class Settings(BaseSettings):
 
     # Redis
     REDIS_HOST: str = os.getenv("REDIS_HOST", "redis")
-    REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
-    REDIS_DB: int = int(os.getenv("REDIS_DB", 0))
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
     REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
 
 
