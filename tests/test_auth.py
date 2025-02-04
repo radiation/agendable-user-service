@@ -9,7 +9,7 @@ async def test_user_registration_and_login(test_client, db_session):
     # Registration payload
     user_data = {"email": "test_auth@example.com", "password": "securepassword"}
 
-    # Step 1: Register a new user
+    # Register a new user
     response = await test_client.post("/auth/register", json=user_data)
     assert response.status_code == 200
 
@@ -26,7 +26,7 @@ async def test_user_registration_and_login(test_client, db_session):
     assert user.email == user_data["email"]
     assert verify_password(user_data["password"], user.hashed_password)
 
-    # Step 2: Login with the same credentials
+    # Login with the same credentials
     response = await test_client.post("/auth/login", json=user_data)
     assert response.status_code == 200
 
