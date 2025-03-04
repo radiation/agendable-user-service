@@ -1,13 +1,15 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
+    -   id: check-added-large-files
+        stages: [commit, push]
 
 -   repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.1.7
+    rev: v0.9.9
     hooks:
     -   id: ruff
         args: [--fix]
@@ -27,7 +29,7 @@ repos:
 # R0903 (too-few-public-methods)
 # W0511 (fixme)
 -   repo: https://github.com/PyCQA/pylint
-    rev: v3.0.3
+    rev: v3.3.4
     hooks:
     -   id: pylint
         language: system

@@ -96,7 +96,6 @@ async def group_service(db_session, mock_redis_client):
     return service
 
 
-
 @pytest.fixture
 async def role_service(db_session, mock_redis_client):
     repo = RoleRepository(db_session)
