@@ -1,3 +1,26 @@
+[project]
+name = "agendable-user-service"
+version = "0.1.0"
+description = "Agendable User Service"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "alchemy>=20.5",
+    "asyncpg>=0.30.0",
+    "fastapi>=0.115.11",
+    "greenlet>=3.1.1",
+    "httpx>=0.28.1",
+    "loguru>=0.7.3",
+    "passlib[bcrypt]>=1.7.4",
+    "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.8.1",
+    "pydantic[email]>=2.10.6",
+    "python-jose>=3.4.0",
+    "redis>=5.2.1",
+    "sql>=2022.4.0",
+    "uvicorn[standard]>=0.34.0",
+]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 
@@ -10,4 +33,14 @@ known_first_party = ["app"]
 exclude = [
     "**/__init__.py",
     "**/alembic/versions/**"
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.21.0",
+    "alembic>=1.14.1",
+    "async-asgi-testclient>=1.4.11",
+    "isort>=6.0.1",
+    "pytest-asyncio>=0.25.3",
+    "ruff>=0.9.9",
 ]
