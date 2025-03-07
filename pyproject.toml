@@ -5,7 +5,6 @@ description = "Agendable User Service"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "alchemy>=20.5",
     "asyncpg>=0.30.0",
     "fastapi>=0.115.11",
     "greenlet>=3.1.1",
@@ -42,7 +41,7 @@ dev = [
     "async-asgi-testclient>=1.4.11",
     "coverage>=7.6.12",
     "isort>=6.0.1",
-    "pre-commit>=2.20.0",
+    "pre-commit>=4.1.0",
     "pylint>=3.3.4",
     "pytest-asyncio>=0.25.3",
     "ruff>=0.9.9",
