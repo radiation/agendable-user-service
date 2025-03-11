@@ -1,13 +1,13 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
 
 -   repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.9.9
+    rev: v0.9.10
     hooks:
     -   id: ruff
         args: [--fix]
@@ -24,11 +24,13 @@ repos:
 # C0115 (missing-class-docstring)
 # C0116 (missing-function-docstring)
 # E0013 (bad-continuation)
+# E0401 (import-error) - TODO: pylint runs in dev and can't find imports
 # R0903 (too-few-public-methods)
 # W0511 (fixme)
 -   repo: https://github.com/PyCQA/pylint
-    rev: v3.3.4
+    rev: v3.3.5
     hooks:
     -   id: pylint
-        args: ["--disable=C0103,C0114,C0115,C0116,E0013,R0903,W0511"]
+        entry: pylint
+        args: ["--disable=C0103,C0114,C0115,C0116,E0013,E0401,R0903,W0511"]
         exclude: "alembic/.*"

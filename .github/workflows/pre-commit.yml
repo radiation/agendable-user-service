@@ -26,28 +26,5 @@ jobs:
         with:
           python-version-file: ".python-version"
 
-      - name: Print Python Version
-        run: python --version
-
-      - name: Print Virtualenv Version (Before Install)
-        run: uv pip show virtualenv || echo "Virtualenv not installed"
-
-      - name: Upgrade Virtualenv (Ensure No Pipes Error)
-        run: |
-          uv pip install --system --upgrade virtualenv
-          uv pip show virtualenv
-
-      - name: Clear Pre-Commit Cache
-        run: rm -rf ~/.cache/pre-commit
-
-      - name: Install Pre-Commit System-Wide
-        run: uv pip install --system --upgrade pre-commit
-
-      - name: Print Virtualenv Version (After Install)
-        run: uv pip show virtualenv
-
-      - name: Reinstall Pre-Commit Hooks (Ensuring Correct Virtualenv)
-        run: uv run pre-commit install --install-hooks
-
-      - name: Run Pre-Commit
+      - name: Run pre-commit
         run: uv run pre-commit run --all-files
